@@ -135,6 +135,23 @@ export class NoTaskComponent implements OnDestroy {
     }
   }
 
+  // Helper to safely get form control
+  getControl(controlName: string): AbstractControl | null {
+    return this.userForm.get(controlName);
+  }
+
+  // Helper to check if control is invalid and touched/dirty
+  isControlInvalid(controlName: string): boolean {
+    const control = this.getControl(controlName);
+    return !!control && control.invalid && (control.dirty || control.touched);
+  }
+
+  // Helper to get specific error
+  hasError(controlName: string, errorType: string): boolean {
+    const control = this.getControl(controlName);
+    return !!control && !!control.errors && !!control.errors[errorType];
+  }
+
   addNewUser() {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();

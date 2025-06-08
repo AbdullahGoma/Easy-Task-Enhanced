@@ -1,78 +1,81 @@
 <div class="no-task-container">
-  <div class="no-task-icon">📭</div>
-  <p>Select a user to see their tasks!</p>
-  <div class="no-task-cta">
-    Or <a (click)="openAddUserModal()">add a new user</a> to get started
-  </div>
-</div>
-
-<!-- Add User Modal -->
-<div class="backdrop" *ngIf="showAddUserModal()"></div>
-
-<dialog [open]="showAddUserModal()">
-  <h2>Add New User</h2>
-  <form [formGroup]="userForm" (ngSubmit)="addNewUser()">
-    <div class="form-group">
-      <label for="user-name">User Name</label>
-      <input type="text" id="user-name" formControlName="name" />
-      @if (userForm.get('name')?.invalid && (userForm.get('name')?.dirty ||
-      userForm.get('name')?.touched)) {
-      <div class="error-message">
-        @if (userForm.get('name')?.errors?.['required']) {
-        <div>Name is required</div>
-        } @if (userForm.get('name')?.errors?.['minlength']) {
-        <div>Name must be at least 2 characters</div>
-        }
-      </div>
-      }
+    <div class="no-task-icon">📭</div>
+    <p>Select a user to see their tasks!</p>
+    <div class="no-task-cta">
+      Or <a (click)="openAddUserModal()">add a new user</a> to get started
     </div>
-
-    <div class="form-group">
-      <label for="user-avatar">Profile Picture</label>
-      <input
-        #fileInput
-        type="file"
-        id="user-avatar"
-        accept="image/*"
-        (change)="onFileSelected($event)"
-      />
-      @if (userForm.get('avatarFile')?.invalid && (userForm.get('avatarFile')?.dirty || userForm.get('avatarFile')?.touched)) {
+  </div>
+  
+  <!-- Add User Modal -->
+  <div class="backdrop" *ngIf="showAddUserModal()"></div>
+  
+  <dialog [open]="showAddUserModal()">
+    <h2>Add New User</h2>
+    <form [formGroup]="userForm" (ngSubmit)="addNewUser()">
+      <div class="form-group">
+        <label for="user-name">User Name</label>
+        <input type="text" id="user-name" formControlName="name" />
+        @if (isControlInvalid('name')) {
         <div class="error-message">
-          @if (userForm.get('avatarFile')?.errors?.['required']) {
-            <div>Avatar is required</div>
+          @if (hasError('name', 'required')) {
+          <div>Name is required</div>
           }
-          @if (userForm.get('avatarFile')?.errors?.['invalidType']) {
-            <div>Only image files are allowed</div>
-          }
-          @if (userForm.get('avatarFile')?.errors?.['maxSize']) {
-            <div>File must be less than 2MB</div>
+          @if (hasError('name', 'minlength')) {
+          <div>Name must be at least 2 characters</div>
           }
         </div>
+        }
+      </div>
+  
+      <div class="form-group">
+        <label for="user-avatar">Profile Picture</label>
+        <input
+          #fileInput
+          type="file"
+          id="user-avatar"
+          accept="image/*"
+          (change)="onFileSelected($event)"
+        />
+        @if (isControlInvalid('avatarFile')) {
+          <div class="error-message">
+            @if (hasError('avatarFile', 'required')) {
+              <div>Avatar is required</div>
+            }
+            @if (hasError('avatarFile', 'invalidType')) {
+              <div>Only image files are allowed</div>
+            }
+            @if (hasError('avatarFile', 'maxSize')) {
+              <div>File must be less than 2MB</div>
+            }
+          </div>
+        }
+      </div>
+  
+      @if (avatarPreview()) {
+      <div class="avatar-preview">
+        <img [src]="avatarPreview()" alt="Avatar preview" />
+      </div>
       }
       
-      
-    </div>
-
-    @if (avatarPreview()) {
-    <div class="avatar-preview">
-      <img [src]="avatarPreview()" alt="Avatar preview" />
-    </div>
-    } @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
-    }
-
-    <div class="actions">
-      <button
-        type="button"
-        (click)="closeAddUserModal()"
-        [disabled]="isUploading()"
-      >
-        Cancel
-      </button>
-      <button type="submit" [disabled]="userForm.invalid || isUploading()">
-        <span *ngIf="!isUploading()">Add User</span>
-        <span *ngIf="isUploading()">Adding...</span>
-      </button>
-    </div>
-  </form>
-</dialog>
+      @if (errorMessage()) {
+      <div class="error-message">{{ errorMessage() }}</div>
+      }
+  
+      <div class="actions">
+        <button
+          type="button"
+          (click)="closeAddUserModal()"
+          [disabled]="isUploading()"
+        >
+          Cancel
+        </button>
+        <button type="submit" [disabled]="userForm.invalid || isUploading()">
+            @if (!isUploading()) {
+                <span>Add User</span>
+            } @else {
+                <span>Adding...</span>
+            }
+        </button>
+      </div>
+    </form>
+  </dialog>
