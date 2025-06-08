@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 
 import { DUMMY_USERS } from '../../dummy-users';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { ImageStorageService } from '../image-storage.service';
 import { User } from './user/user.model';
 
 @Injectable({
@@ -10,6 +11,7 @@ import { User } from './user/user.model';
 export class UsersService {
   private users = signal<User[]>(DUMMY_USERS);
   private users$ = new BehaviorSubject<User[]>(DUMMY_USERS);
+  private imageStorage = inject(ImageStorageService);
 
   get allUsers() {
     return this.users();
@@ -19,11 +21,18 @@ export class UsersService {
     return this.users$.asObservable();
   }
 
-  addUser(name: string, avatar: string | ArrayBuffer | null): Observable<User> {
+  addUser(name: string, avatarData: string | null): Observable<User> {
+    const userId = 'u' + (this.users().length + 1);
+    let avatarPath = this.getDefaultAvatar();
+
+    if (avatarData) {
+      avatarPath = this.imageStorage.saveImageToLocalStorage(userId, avatarData);
+    }
+
     const newUser: User = {
-      id: 'u' + (this.users().length + 1),
+      id: userId,
       name: name,
-      avatar: avatar || this.getDefaultAvatar(),
+      avatar: avatarPath,
     };
 
     this.users.update((currentUsers) => [...currentUsers, newUser]);
@@ -33,6 +42,6 @@ export class UsersService {
   }
 
   private getDefaultAvatar(): string {
-    return 'default-avatar.jpg';
+    return '/users/default-avatar.jpg';
   }
 }

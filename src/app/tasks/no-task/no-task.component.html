@@ -11,36 +11,57 @@
 
 <dialog [open]="showAddUserModal()">
   <h2>Add New User</h2>
-  <form (ngSubmit)="addNewUser()">
-    <p>
+  <form [formGroup]="userForm" (ngSubmit)="addNewUser()">
+    <div class="form-group">
       <label for="user-name">User Name</label>
-      <input
-        type="text"
-        id="user-name"
-        name="user-name"
-        [(ngModel)]="newUserName()"
-        required
-      />
-    </p>
+      <input type="text" id="user-name" formControlName="name" />
+      @if (userForm.get('name')?.invalid && (userForm.get('name')?.dirty ||
+      userForm.get('name')?.touched)) {
+      <div class="error-message">
+        @if (userForm.get('name')?.errors?.['required']) {
+        <div>Name is required</div>
+        } @if (userForm.get('name')?.errors?.['minlength']) {
+        <div>Name must be at least 2 characters</div>
+        }
+      </div>
+      }
+    </div>
 
-    <p>
+    <div class="form-group">
       <label for="user-avatar">Profile Picture</label>
       <input
+        #fileInput
         type="file"
         id="user-avatar"
-        name="user-avatar"
         accept="image/*"
         (change)="onFileSelected($event)"
       />
-    </p>
-
-    <div class="avatar-preview" *ngIf="selectedAvatar()">
-      <img [src]="selectedAvatar()" alt="Avatar preview" />
+      @if (userForm.get('avatarFile')?.invalid && (userForm.get('avatarFile')?.dirty || userForm.get('avatarFile')?.touched)) {
+        <div class="error-message">
+          @if (userForm.get('avatarFile')?.errors?.['required']) {
+            <div>Avatar is required</div>
+          }
+          @if (userForm.get('avatarFile')?.errors?.['invalidType']) {
+            <div>Only image files are allowed</div>
+          }
+          @if (userForm.get('avatarFile')?.errors?.['maxSize']) {
+            <div>File must be less than 2MB</div>
+          }
+        </div>
+      }
+      
+      
     </div>
 
-    <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+    @if (avatarPreview()) {
+    <div class="avatar-preview">
+      <img [src]="avatarPreview()" alt="Avatar preview" />
+    </div>
+    } @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+    }
 
-    <p class="actions">
+    <div class="actions">
       <button
         type="button"
         (click)="closeAddUserModal()"
@@ -48,10 +69,10 @@
       >
         Cancel
       </button>
-      <button type="submit" [disabled]="isUploading()">
+      <button type="submit" [disabled]="userForm.invalid || isUploading()">
         <span *ngIf="!isUploading()">Add User</span>
         <span *ngIf="isUploading()">Adding...</span>
       </button>
-    </p>
+    </div>
   </form>
 </dialog>

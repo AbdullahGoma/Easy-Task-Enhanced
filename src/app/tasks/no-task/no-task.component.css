@@ -177,6 +177,15 @@ dialog button[type="submit"]:hover {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #9c73ca;
+  margin-top: 1rem;
+}
+
+img {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
 }
 
 .error-message {
