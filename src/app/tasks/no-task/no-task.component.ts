@@ -5,11 +5,12 @@ import {
   OnDestroy,
   signal,
   ViewChild,
+  OnInit,
 } from '@angular/core';
-
 import {
   AbstractControl,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
@@ -21,6 +22,12 @@ import { finalize, Subject, takeUntil } from 'rxjs';
 import { UsersService } from '../../users/users.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
+interface UserForm {
+  name: FormControl<string | null>;
+  avatarFile: FormControl<File | null>;
+  avatarData: FormControl<string | null>;
+}
+
 @Component({
   selector: 'app-no-task',
   standalone: true,
@@ -28,41 +35,54 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
   styleUrls: ['./no-task.component.css'],
   imports: [CommonModule, ReactiveFormsModule],
 })
-export class NoTaskComponent implements OnDestroy {
-  private usersService = inject(UsersService);
-  private fb = inject(FormBuilder);
-  private sanitizer = inject(DomSanitizer);
-  private destroy$ = new Subject<void>();
+export class NoTaskComponent implements OnInit, OnDestroy {
+  // Services
+  private readonly usersService = inject(UsersService);
+  private readonly fb = inject(FormBuilder);
+  private readonly sanitizer = inject(DomSanitizer);
 
-  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
-  showAddUserModal = signal(false);
-  isUploading = signal(false);
-  errorMessage = signal('');
-  avatarPreview = signal<SafeUrl | null>(null);
+  // State management
+  private readonly destroy$ = new Subject<void>();
+  readonly showAddUserModal = signal(false);
+  readonly isUploading = signal(false);
+  readonly errorMessage = signal('');
+  readonly avatarPreview = signal<SafeUrl | null>(null);
 
+  // Form
   userForm!: FormGroup;
 
+  // View references
+  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
+
   ngOnInit(): void {
-    this.userForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      avatarFile: [null, [Validators.required, this.fileValidator]],
-      avatarData: [null],
+    this.initializeForm();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeForm(): void {
+    this.userForm = this.fb.group<UserForm>({
+      name: new FormControl('', [Validators.required, Validators.minLength(2)]),
+      avatarFile: new FormControl(null, [
+        Validators.required,
+        this.fileValidator,
+      ]),
+      avatarData: new FormControl(null),
     });
   }
 
-  private fileValidator: ValidatorFn = (
+  private readonly fileValidator: ValidatorFn = (
     control: AbstractControl
   ): ValidationErrors | null => {
     const file = control.value as File;
-
-    // Required check is already handled by Validators.required
-    if (!file) {
-      return null;
-    }
+    if (!file) return null;
 
     const errors: ValidationErrors = {};
 
-    if (!file.type.match('image.*')) {
+    if (!file.type.startsWith('image/')) {
       errors['invalidType'] = true;
     }
 
@@ -73,86 +93,102 @@ export class NoTaskComponent implements OnDestroy {
     return Object.keys(errors).length > 0 ? errors : null;
   };
 
-  openAddUserModal() {
-    this.userForm.reset();
-    this.showAddUserModal.set(true);
-    this.errorMessage.set('');
-    this.avatarPreview.set(null);
+  //#region Form Helpers
+  getControl(controlName: keyof UserForm): AbstractControl | null {
+    return this.userForm.get(controlName);
   }
 
-  closeAddUserModal() {
+  isControlInvalid(controlName: keyof UserForm): boolean {
+    const control = this.getControl(controlName);
+    return !!control?.invalid && (control?.dirty || control?.touched);
+  }
+
+  hasError(controlName: keyof UserForm, errorType: string): boolean {
+    const control = this.getControl(controlName);
+    return !!control?.errors?.[errorType];
+  }
+  //#endregion
+
+  //#region Modal Management
+  openAddUserModal(): void {
+    this.resetFormState();
+    this.showAddUserModal.set(true);
+  }
+
+  closeAddUserModal(): void {
+    this.resetFormState();
     this.showAddUserModal.set(false);
+  }
+
+  private resetFormState(): void {
     this.userForm.reset();
     this.errorMessage.set('');
     this.avatarPreview.set(null);
+    this.clearFileInput();
+  }
 
+  private clearFileInput(): void {
     if (this.fileInputRef) {
       this.fileInputRef.nativeElement.value = '';
     }
   }
+  //#endregion
 
-  onFileSelected(event: Event) {
+  onFileSelected(event: Event): void {
     this.errorMessage.set('');
-    const input = event.target as HTMLInputElement;
-    // Clear previous values
+    this.clearPreview();
+
+    const file = (event.target as HTMLInputElement)?.files?.[0];
+    if (!file) {
+      this.setAvatarFile(null);
+      return;
+    }
+
+    this.validateAndProcessFile(file);
+  }
+
+  private clearPreview(): void {
     this.avatarPreview.set(null);
     this.userForm.patchValue({ avatarData: null });
+  }
 
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
+  private validateAndProcessFile(file: File): void {
+    this.setAvatarFile(file);
 
-      // Set the file value and validate first
-      this.userForm.get('avatarFile')?.setValue(file);
-      this.userForm.get('avatarFile')?.markAsTouched();
-      this.userForm.get('avatarFile')?.updateValueAndValidity();
-
-      // Only create preview if file is valid (not oversized and correct type)
-      if (!this.userForm.get('avatarFile')?.errors) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const dataUrl = reader.result as string;
-          this.avatarPreview.set(
-            this.sanitizer.bypassSecurityTrustUrl(dataUrl)
-          );
-          this.userForm.patchValue({ avatarData: dataUrl });
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // Clear preview if file is invalid
-        this.avatarPreview.set(null);
-        this.userForm.patchValue({ avatarData: null });
-
-        // Reset the file input if file is invalid
-        if (this.fileInputRef) {
-          this.fileInputRef.nativeElement.value = '';
-        }
-      }
+    if (this.isAvatarFileValid()) {
+      this.createImagePreview(file);
     } else {
-      // Clear the value if no file selected
-      this.userForm.get('avatarFile')?.setValue(null);
-      this.avatarPreview.set(null);
-      this.userForm.patchValue({ avatarData: null });
+      this.handleInvalidFile();
     }
   }
 
-  // Helper to safely get form control
-  getControl(controlName: string): AbstractControl | null {
-    return this.userForm.get(controlName);
+  private setAvatarFile(file: File | null): void {
+    this.getControl('avatarFile')?.setValue(file);
+    this.getControl('avatarFile')?.markAsTouched();
+    this.getControl('avatarFile')?.updateValueAndValidity();
   }
 
-  // Helper to check if control is invalid and touched/dirty
-  isControlInvalid(controlName: string): boolean {
-    const control = this.getControl(controlName);
-    return !!control && control.invalid && (control.dirty || control.touched);
+  private isAvatarFileValid(): boolean {
+    return !this.getControl('avatarFile')?.errors;
   }
 
-  // Helper to get specific error
-  hasError(controlName: string, errorType: string): boolean {
-    const control = this.getControl(controlName);
-    return !!control && !!control.errors && !!control.errors[errorType];
+  private createImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = reader.result as string;
+      this.avatarPreview.set(this.sanitizer.bypassSecurityTrustUrl(dataUrl));
+      this.userForm.patchValue({ avatarData: dataUrl });
+    };
+    reader.readAsDataURL(file);
   }
 
-  addNewUser() {
+  private handleInvalidFile(): void {
+    this.clearPreview();
+    this.clearFileInput();
+  }
+  //#endregion
+
+  addNewUser(): void {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       return;
@@ -161,10 +197,7 @@ export class NoTaskComponent implements OnDestroy {
     this.isUploading.set(true);
 
     this.usersService
-      .addUser(
-        this.userForm.value.name,
-        this.userForm.value.avatarData // Use the stored base64 data
-      )
+      .addUser(this.userForm.value.name, this.userForm.value.avatarData)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.isUploading.set(false))
@@ -172,12 +205,7 @@ export class NoTaskComponent implements OnDestroy {
       .subscribe({
         next: () => this.closeAddUserModal(),
         error: (err) =>
-          this.errorMessage.set('Error adding user: ' + err.message),
+          this.errorMessage.set(`Error adding user: ${err.message}`),
       });
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }
