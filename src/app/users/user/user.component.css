@@ -2,13 +2,14 @@ div {
   border-radius: 6px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-a {
+div a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.5rem;
+  padding: 0.5rem;
   background-color: #433352;
   color: #c3b3d1;
   border: none;
@@ -18,25 +19,42 @@ a {
   min-width: 10rem;
   text-align: left;
   text-decoration: none;
+  transition: all 0.3s ease;
 }
 
-a:hover,
-a:active,
-.selected {
+div a img {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+div a span {
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+div a:hover,
+div a:active,
+div a.selected {
   background-color: #9965dd;
   color: #150722;
 }
 
-img {
-  width: 2rem;
-  object-fit: contain;
-  border-radius: 50%;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+div a:hover img,
+div a:active img,
+div a.selected img {
+  transform: scale(1.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
-span {
-  margin: 0;
-  padding: 0;
-  font-size: 0.8rem;
-  font-weight: normal;
+div a:hover span,
+div a:active span,
+div a.selected span {
+  font-weight: 600;
 }

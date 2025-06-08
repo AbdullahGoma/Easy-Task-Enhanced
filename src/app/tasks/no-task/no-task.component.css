@@ -1,13 +1,79 @@
-p {
+/* No Task Component */
+.no-task-container {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(58, 44, 84, 0.5);
+  border-radius: 8px;
+  border: 1px dashed #5a4575;
+  margin: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+.no-task-container:hover {
+  background: rgba(67, 51, 82, 0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.no-task-container p {
   font-weight: bold;
   font-size: 1.15rem;
   margin: 0;
-  text-align: center;
+  color: #d0c2e1;
+  position: relative;
+  display: inline-block;
+}
+
+.no-task-container p::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(to right, #9c73ca, #a565dd, #9c73ca);
+}
+
+.no-task-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #9c73ca;
+  opacity: 0.8;
+}
+
+.no-task-cta {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #ab9ac0;
+}
+
+.no-task-cta a {
+  color: #9c73ca;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.no-task-cta a:hover {
+  color: #a565dd;
+  text-decoration: underline;
 }
 
 @media (min-width: 768px) {
-  p {
+  .no-task-container {
+    padding: 3rem;
+  }
+  
+  .no-task-container p {
     font-size: 1.5rem;
-    text-align: left;
+  }
+  
+  .no-task-icon {
+    font-size: 3.5rem;
+  }
+  
+  .no-task-cta {
+    font-size: 1rem;
   }
 }
