@@ -2,6 +2,56 @@
   <div class="no-task-icon">📭</div>
   <p>Select a user to see their tasks!</p>
   <div class="no-task-cta">
-    Or <a (click)="addNewUser()">add a new user</a> to get started
+    Or <a (click)="openAddUserModal()">add a new user</a> to get started
   </div>
 </div>
+
+<!-- Add User Modal -->
+<div class="backdrop" *ngIf="showAddUserModal()"></div>
+
+<dialog [open]="showAddUserModal()">
+  <h2>Add New User</h2>
+  <form (ngSubmit)="addNewUser()">
+    <p>
+      <label for="user-name">User Name</label>
+      <input
+        type="text"
+        id="user-name"
+        name="user-name"
+        [(ngModel)]="newUserName()"
+        required
+      />
+    </p>
+
+    <p>
+      <label for="user-avatar">Profile Picture</label>
+      <input
+        type="file"
+        id="user-avatar"
+        name="user-avatar"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+      />
+    </p>
+
+    <div class="avatar-preview" *ngIf="selectedAvatar()">
+      <img [src]="selectedAvatar()" alt="Avatar preview" />
+    </div>
+
+    <p class="error-message" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+    <p class="actions">
+      <button
+        type="button"
+        (click)="closeAddUserModal()"
+        [disabled]="isUploading()"
+      >
+        Cancel
+      </button>
+      <button type="submit" [disabled]="isUploading()">
+        <span *ngIf="!isUploading()">Add User</span>
+        <span *ngIf="isUploading()">Adding...</span>
+      </button>
+    </p>
+  </form>
+</dialog>
