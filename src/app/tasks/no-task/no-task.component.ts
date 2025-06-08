@@ -55,17 +55,22 @@ export class NoTaskComponent implements OnDestroy {
   ): ValidationErrors | null => {
     const file = control.value as File;
 
-    if (!file) return null;
+    // Required check is already handled by Validators.required
+    if (!file) {
+      return null;
+    }
+
+    const errors: ValidationErrors = {};
 
     if (!file.type.match('image.*')) {
-      return { invalidType: true };
+      errors['invalidType'] = true;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      return { maxSize: true };
+      errors['maxSize'] = true;
     }
 
-    return null;
+    return Object.keys(errors).length > 0 ? errors : null;
   };
 
   openAddUserModal() {
@@ -89,23 +94,44 @@ export class NoTaskComponent implements OnDestroy {
   onFileSelected(event: Event) {
     this.errorMessage.set('');
     const input = event.target as HTMLInputElement;
+    // Clear previous values
+    this.avatarPreview.set(null);
+    this.userForm.patchValue({ avatarData: null });
 
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      this.userForm.patchValue({ avatarFile: file });
 
-      this.userForm.patchValue({ avatarFile: file });
+      // Set the file value and validate first
+      this.userForm.get('avatarFile')?.setValue(file);
       this.userForm.get('avatarFile')?.markAsTouched();
       this.userForm.get('avatarFile')?.updateValueAndValidity();
 
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = reader.result as string;
-        this.avatarPreview.set(this.sanitizer.bypassSecurityTrustUrl(dataUrl));
-        this.userForm.patchValue({ avatarData: dataUrl });
-      };
-      reader.readAsDataURL(file);
+      // Only create preview if file is valid (not oversized and correct type)
+      if (!this.userForm.get('avatarFile')?.errors) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = reader.result as string;
+          this.avatarPreview.set(
+            this.sanitizer.bypassSecurityTrustUrl(dataUrl)
+          );
+          this.userForm.patchValue({ avatarData: dataUrl });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Clear preview if file is invalid
+        this.avatarPreview.set(null);
+        this.userForm.patchValue({ avatarData: null });
+
+        // Reset the file input if file is invalid
+        if (this.fileInputRef) {
+          this.fileInputRef.nativeElement.value = '';
+        }
+      }
+    } else {
+      // Clear the value if no file selected
+      this.userForm.get('avatarFile')?.setValue(null);
+      this.avatarPreview.set(null);
+      this.userForm.patchValue({ avatarData: null });
     }
   }
 
