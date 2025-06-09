@@ -1,8 +1,8 @@
-@if (isOpen$ | async) {
+@if (isOpen) {
 <ng-container>
   <app-modal-backdrop></app-modal-backdrop>
 
-  <dialog class="modal-dialog" [open]="isOpen$ | async">
+  <dialog class="modal-dialog" [open]="isOpen">
     <h2>Add New User</h2>
     <form [formGroup]="userForm" (ngSubmit)="addNewUser()">
       <div class="form-group">

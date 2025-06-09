@@ -1,4 +1,6 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -23,6 +25,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ModalService } from '../../modal.service';
 import { Subject } from 'rxjs';
 import { ModalBackdropComponent } from "../../modal-backdrop.component";
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 interface UserForm {
   name: FormControl<string | null>;
@@ -41,6 +44,7 @@ interface UserForm {
     ModalBackdropComponent,
     AsyncPipe,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AddUserModalComponent implements OnInit, OnDestroy {
   // Services
@@ -48,9 +52,10 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly modalService = inject(ModalService);
   private readonly destroy$ = new Subject<void>();
+  private readonly cdRef = inject(ChangeDetectorRef);
 
   // Observable for modal state
-  isOpen$ = this.modalService.isModalOpen('addUser');
+  isOpen = false;
 
   // Outputs
   @Output() userAdded = new EventEmitter<{
@@ -66,10 +71,20 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   // View references
   @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
 
+  constructor() {
+    this.modalService
+      .isModalOpen('addUser')
+      .pipe(takeUntilDestroyed())
+      .subscribe((open) => {
+        this.isOpen = open;
+        this.cdRef.markForCheck(); // Manually trigger change detection
+      });
+  }
   // Form
   userForm!: FormGroup;
   ngOnInit(): void {
     this.initializeForm();
+
   }
 
   ngOnDestroy(): void {
@@ -180,6 +195,7 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
       const dataUrl = reader.result as string;
       this.avatarPreview = this.sanitizer.bypassSecurityTrustUrl(dataUrl);
       this.userForm.patchValue({ avatarData: dataUrl });
+      this.cdRef.markForCheck(); // Manually trigger change detection
     };
     reader.readAsDataURL(file);
   }
@@ -187,6 +203,7 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   private handleInvalidFile(): void {
     this.clearPreview();
     this.clearFileInput();
+    this.cdRef.markForCheck(); // Manually trigger change detection
   }
 
   // Remove Image
@@ -196,6 +213,7 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
     this.clearFileInput();
     this.setAvatarFile(null);
     this.errorMessage = '';
+    this.cdRef.markForCheck(); // Manually trigger change detection
   }
 
   openImagePreview(): void {
@@ -227,10 +245,12 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   addNewUser(): void {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
+      this.cdRef.markForCheck(); // Manually trigger change detection
       return;
     }
 
     this.isUploading = true;
+    this.cdRef.markForCheck(); // Manually trigger change detection
 
     try {
       this.userAdded.emit({
@@ -242,8 +262,10 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
       this.errorMessage = `Error adding user: ${
         err instanceof Error ? err.message : 'Unknown error'
       }`;
+      this.cdRef.markForCheck(); // Manually trigger change detection
     } finally {
       this.isUploading = false;
+      this.cdRef.markForCheck(); // Manually trigger change detection
     }
   }
 }

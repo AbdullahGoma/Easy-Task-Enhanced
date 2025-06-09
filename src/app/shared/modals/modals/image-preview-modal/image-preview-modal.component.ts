@@ -1,11 +1,12 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   inject,
 } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+
 import { ModalService } from '../../modal.service';
-import { map, Observable } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
+import { combineLatest } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -13,24 +14,30 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   standalone: true,
   templateUrl: './image-preview-modal.component.html',
   styleUrls: ['./image-preview-modal.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImagePreviewModalComponent {
   private modalService = inject(ModalService);
+  private cdRef = inject(ChangeDetectorRef); // Used when 
+  // we Use ChangeDetectionStrategy.OnPush to tell angular 
+  // that we change a value
 
   imageUrl: string | null = null;
   isOpen = false;
 
   constructor() {
-    this.modalService
-      .getModalData<string>('imagePreview')
+    combineLatest([
+      this.modalService.getModalData<string>('imagePreview'),
+      this.modalService.isModalOpen('imagePreview'),
+    ])
       .pipe(takeUntilDestroyed())
-      .subscribe((url) => (this.imageUrl = url));
-
-    this.modalService
-      .isModalOpen('imagePreview')
-      .pipe(takeUntilDestroyed())
-      .subscribe((open) => (this.isOpen = open));
+      .subscribe(([url, open]) => {
+        this.imageUrl = url;
+        this.isOpen = open;
+        this.cdRef.markForCheck(); // here
+      });
   }
+
   closeModal() {
     this.modalService.closeModal('imagePreview');
   }
