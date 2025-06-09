@@ -18,7 +18,7 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ModalService } from '../../modal.service';
 import { Subject } from 'rxjs';
@@ -35,7 +35,12 @@ interface UserForm {
   standalone: true,
   templateUrl: './add-user-modal.component.html',
   styleUrls: ['./add-user-modal.component.css'],
-  imports: [CommonModule, ReactiveFormsModule, ModalBackdropComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ModalBackdropComponent,
+    AsyncPipe,
+  ],
 })
 export class AddUserModalComponent implements OnInit, OnDestroy {
   // Services
@@ -43,6 +48,9 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly modalService = inject(ModalService);
   private readonly destroy$ = new Subject<void>();
+
+  // Observable for modal state
+  isOpen$ = this.modalService.isModalOpen('addUser');
 
   // Outputs
   @Output() userAdded = new EventEmitter<{
@@ -112,17 +120,6 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   hasError(controlName: keyof UserForm, errorType: string): boolean {
     const control = this.getControl(controlName);
     return !!control?.errors?.[errorType];
-  }
-
-  // Open the Modal
-  get IsModalOpen() {
-    return this.modalService.isModalOpen('addUser');
-  }
-
-  // Modal Management
-  closeModal(): void {
-    this.resetFormState();
-    this.modalService.closeModal('addUser');
   }
 
   private resetFormState(): void {
@@ -203,15 +200,27 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
 
   openImagePreview(): void {
     if (this.avatarPreview) {
-      // Get the actual URL string from the SafeUrl
-      const unsafeUrl = this.sanitizer.sanitize(
-        4, // SecurityContext.URL
-        this.avatarPreview
-      );
-      if (unsafeUrl) {
-        this.modalService.openModal('imagePreview', unsafeUrl);
+      // If avatarPreview is already a SafeUrl, get the string value
+      const url =
+        typeof this.avatarPreview === 'string'
+          ? this.avatarPreview
+          : this.sanitizer.sanitize(4, this.avatarPreview);
+
+      if (url) {
+        this.modalService.openModal('imagePreview', url);
       }
     }
+  }
+
+  // Check if the modal in the list (If the modal in the list will open)
+  get IsModalOpen() {
+    return this.modalService.isModalOpen('addUser');
+  }
+
+  // Modal Management
+  closeModal(): void {
+    this.resetFormState();
+    this.modalService.closeModal('addUser');
   }
 
   // Submit

@@ -1,87 +1,87 @@
+@if (isOpen$ | async) {
+<ng-container>
+  <app-modal-backdrop></app-modal-backdrop>
 
-@if (IsModalOpen) {
-    <app-modal-backdrop></app-modal-backdrop>
-}
-    
-
-<dialog [open]="IsModalOpen">
-  <h2>Add New User</h2>
-  <form [formGroup]="userForm" (ngSubmit)="addNewUser()">
-    <div class="form-group">
-      <label for="user-name">User Name</label>
-      <input type="text" id="user-name" formControlName="name" />
-      @if (isControlInvalid('name')) {
-      <div class="error-message">
-        @if (hasError('name', 'required')) {
-        <div>Name is required</div>
-        } @if (hasError('name', 'minlength')) {
-        <div>Name must be at least 2 characters</div>
+  <dialog class="modal-dialog" [open]="isOpen$ | async">
+    <h2>Add New User</h2>
+    <form [formGroup]="userForm" (ngSubmit)="addNewUser()">
+      <div class="form-group">
+        <label for="user-name">User Name</label>
+        <input type="text" id="user-name" formControlName="name" />
+        @if (isControlInvalid('name')) {
+        <div class="error-message">
+          @if (hasError('name', 'required')) {
+          <div>Name is required</div>
+          } @if (hasError('name', 'minlength')) {
+          <div>Name must be at least 2 characters</div>
+          }
+        </div>
         }
       </div>
-      }
-    </div>
 
-    <div class="form-group">
-      <label for="user-avatar">Profile Picture</label>
-      <div class="file-input-container">
-        <label for="user-avatar" class="file-input-label">
-          <span class="file-input-text">
-            {{ avatarPreview ? "Change Image" : "Choose an image..." }}
-          </span>
-        </label>
-        <input
-          #fileInput
-          type="file"
-          id="user-avatar"
-          accept="image/*"
-          (change)="onFileSelected($event)"
+      <div class="form-group">
+        <label for="user-avatar">Profile Picture</label>
+        <div class="file-input-container">
+          <label for="user-avatar" class="file-input-label">
+            <span class="file-input-text">
+              {{ avatarPreview ? "Change Image" : "Choose an image..." }}
+            </span>
+          </label>
+          <input
+            #fileInput
+            type="file"
+            id="user-avatar"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+          />
+        </div>
+        @if (isControlInvalid('avatarFile')) {
+        <div class="error-message">
+          @if (hasError('avatarFile', 'required')) {
+          <div>Avatar is required</div>
+          } @if (hasError('avatarFile', 'invalidType')) {
+          <div>Only image files are allowed</div>
+          } @if (hasError('avatarFile', 'maxSize')) {
+          <div>File must be less than 2MB</div>
+          }
+        </div>
+        }
+      </div>
+
+      @if (avatarPreview) {
+      <div class="avatar-preview">
+        <img
+          [src]="avatarPreview"
+          alt="Avatar preview"
+          (click)="openImagePreview()"
+          title="Click to enlarge"
         />
+        <button
+          type="button"
+          class="remove-image-btn"
+          (click)="removeImage($event)"
+          title="Remove image"
+        >
+          ×
+        </button>
       </div>
-      @if (isControlInvalid('avatarFile')) {
-      <div class="error-message">
-        @if (hasError('avatarFile', 'required')) {
-        <div>Avatar is required</div>
-        } @if (hasError('avatarFile', 'invalidType')) {
-        <div>Only image files are allowed</div>
-        } @if (hasError('avatarFile', 'maxSize')) {
-        <div>File must be less than 2MB</div>
-        }
-      </div>
+      } @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
       }
-    </div>
 
-    @if (avatarPreview) {
-    <div class="avatar-preview">
-      <img
-        [src]="avatarPreview"
-        alt="Avatar preview"
-        (click)="openImagePreview()"
-        title="Click to enlarge"
-      />
-      <button
-        type="button"
-        class="remove-image-btn"
-        (click)="removeImage($event)"
-        title="Remove image"
-      >
-        ×
-      </button>
-    </div>
-    } @if (errorMessage) {
-    <div class="error-message">{{ errorMessage }}</div>
-    }
-
-    <div class="actions">
-      <button type="button" (click)="closeModal()" [disabled]="isUploading">
-        Cancel
-      </button>
-      <button type="submit" [disabled]="userForm.invalid || isUploading">
-        @if (!isUploading) {
-        <span>Add User</span>
-        } @else {
-        <span>Adding...</span>
-        }
-      </button>
-    </div>
-  </form>
-</dialog>
+      <div class="actions">
+        <button type="button" (click)="closeModal()" [disabled]="isUploading">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="userForm.invalid || isUploading">
+          @if (!isUploading) {
+          <span>Add User</span>
+          } @else {
+          <span>Adding...</span>
+          }
+        </button>
+      </div>
+    </form>
+  </dialog>
+</ng-container>
+}

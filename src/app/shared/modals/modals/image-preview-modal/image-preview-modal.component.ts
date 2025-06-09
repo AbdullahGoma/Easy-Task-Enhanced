@@ -1,8 +1,12 @@
-// image-preview-modal.component.ts
-import { Component, inject } from '@angular/core';
+import {
+  Component,
+  inject,
+} from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ModalService } from '../../modal.service';
-import { ModalBackdropComponent } from "../../modal-backdrop.component";
+import { map, Observable } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-image-preview-modal',
@@ -12,17 +16,21 @@ import { ModalBackdropComponent } from "../../modal-backdrop.component";
 })
 export class ImagePreviewModalComponent {
   private modalService = inject(ModalService);
-  private sanitizer = inject(DomSanitizer);
 
-  get isOpen() {
-    return this.modalService.isModalOpen('imagePreview');
+  imageUrl: string | null = null;
+  isOpen = false;
+
+  constructor() {
+    this.modalService
+      .getModalData<string>('imagePreview')
+      .pipe(takeUntilDestroyed())
+      .subscribe((url) => (this.imageUrl = url));
+
+    this.modalService
+      .isModalOpen('imagePreview')
+      .pipe(takeUntilDestroyed())
+      .subscribe((open) => (this.isOpen = open));
   }
-
-  get imageUrl(): SafeUrl | null {
-    const url = this.modalService.getModalData('imagePreview');
-    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
-  }
-
   closeModal() {
     this.modalService.closeModal('imagePreview');
   }
