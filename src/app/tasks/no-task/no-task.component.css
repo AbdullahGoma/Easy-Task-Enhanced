@@ -30,9 +30,28 @@
   bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 50px;
+  width: 6rem;
   height: 2px;
   background: linear-gradient(to right, #9c73ca, #a565dd, #9c73ca);
+  animation: pulseMove 250ms ease-in-out 4; /* 250ms duration, 4 times */
+}
+
+@keyframes pulseMove {
+  0% {
+    transform: translateX(-50%);
+  }
+  25% {
+    transform: translateX(-40%);
+  }
+  50% {
+    transform: translateX(-60%);
+  }
+  75% {
+    transform: translateX(-40%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .no-task-icon {
@@ -53,6 +72,7 @@
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .no-task-cta a:hover {
