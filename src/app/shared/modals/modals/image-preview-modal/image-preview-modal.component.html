@@ -1,0 +1,8 @@
+<div class="image-preview-modal" [class.active]="isOpen">
+  <div class="image-preview-content">
+    @if (imageUrl) {
+        <img [src]="imageUrl" alt="Large preview" />
+    }
+    <button class="close-preview-btn" (click)="closeModal()">×</button>
+  </div>
+</div>
