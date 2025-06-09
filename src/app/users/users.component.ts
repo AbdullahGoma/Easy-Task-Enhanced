@@ -10,7 +10,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
   standalone: true,
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
-  imports: [UserComponent, NoTaskComponent],
+  imports: [UserComponent],
 })
 export class UsersComponent {
   private usersService = inject(UsersService);

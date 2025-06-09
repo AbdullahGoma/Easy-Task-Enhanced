@@ -47,7 +47,9 @@ export class NoTaskComponent implements OnInit, OnDestroy {
   readonly isUploading = signal(false);
   readonly errorMessage = signal('');
   readonly avatarPreview = signal<SafeUrl | null>(null);
-
+  // Large Image Preview
+  readonly showImagePreview = signal(false);
+  readonly largeImagePreview = signal<SafeUrl | null>(null);
   // Form
   userForm!: FormGroup;
 
@@ -187,6 +189,28 @@ export class NoTaskComponent implements OnInit, OnDestroy {
     this.clearFileInput();
   }
   //#endregion
+
+  // Remove Image after preview it
+  removeImage(event: Event): void {
+    event.stopPropagation(); // Prevent triggering the preview when removing
+    this.clearPreview();
+    this.clearFileInput();
+    this.setAvatarFile(null);
+    this.errorMessage.set('');
+  }
+
+  // Large Image Preview
+  openImagePreview(): void {
+    if (this.avatarPreview()) {
+      this.largeImagePreview.set(this.avatarPreview());
+      this.showImagePreview.set(true);
+    }
+  }
+  // Close Larger Image Preview
+  closeImagePreview(): void {
+    this.showImagePreview.set(false);
+    this.largeImagePreview.set(null);
+  }
 
   addNewUser(): void {
     if (this.userForm.invalid) {
