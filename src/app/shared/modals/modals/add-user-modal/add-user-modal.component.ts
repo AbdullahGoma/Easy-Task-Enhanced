@@ -122,7 +122,7 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
   // Modal Management
   closeModal(): void {
     this.resetFormState();
-    this.modalService.closeModal();
+    this.modalService.closeModal('addUser');
   }
 
   private resetFormState(): void {
@@ -203,7 +203,14 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
 
   openImagePreview(): void {
     if (this.avatarPreview) {
-      this.modalService.openModal('imagePreview', this.avatarPreview);
+      // Get the actual URL string from the SafeUrl
+      const unsafeUrl = this.sanitizer.sanitize(
+        4, // SecurityContext.URL
+        this.avatarPreview
+      );
+      if (unsafeUrl) {
+        this.modalService.openModal('imagePreview', unsafeUrl);
+      }
     }
   }
 

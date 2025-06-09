@@ -2,6 +2,7 @@
 import { Component, inject } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ModalService } from '../../modal.service';
+import { ModalBackdropComponent } from "../../modal-backdrop.component";
 
 @Component({
   selector: 'app-image-preview-modal',
@@ -23,6 +24,6 @@ export class ImagePreviewModalComponent {
   }
 
   closeModal() {
-    this.modalService.closeModal();
+    this.modalService.closeModal('imagePreview');
   }
 }
