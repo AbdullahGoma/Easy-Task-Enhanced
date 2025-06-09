@@ -11,5 +11,7 @@ main {
   main {
     margin: 4rem auto;
     grid-template-columns: 1fr 3fr;
+    height: calc(100vh - 8rem); 
+    max-height: 800px; 
   }
 }

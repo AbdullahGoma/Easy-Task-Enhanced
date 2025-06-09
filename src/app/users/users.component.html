@@ -1,7 +1,9 @@
-<ul id="users">
-  @for (user of users(); track user.id) {
-    <li>
-      <app-user [user]="user" />
-    </li>
-  }
-</ul>
+<div class="container">
+  <ul id="users">
+    @for (user of users(); track user.id) {
+      <li>
+        <app-user [user]="user" />
+      </li>
+    }
+  </ul>
+</div>

@@ -1,19 +1,58 @@
+.container {
+  width: 100%;
+  display: grid;
+  overflow: auto; 
+}
+
 ul#users {
   list-style: none;
   margin: 0;
   padding: 0.5rem;
   display: flex;
   gap: 0.5rem;
-  overflow: auto;
   scrollbar-width: thin;
+  width: 100%;
+  scrollbar-color: #9c73ca rgba(44, 10, 76, 0.3);
+  scrollbar-gutter: stable;
+  overflow-x: auto;
+  padding-bottom: 1.5rem;
+  scrollbar-color: #9c73ca #2c0a4c;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Enhanced scrollbar styling */
+ul#users::-webkit-scrollbar {
+  height: 10px; /* Slightly taller for better visibility */
+  width: 10px; /* Added for cross-browser consistency */
+}
+
+ul#users::-webkit-scrollbar-track {
+  background: rgba(44, 10, 76, 0.3);
+  border-radius: 10px;
+  margin: 0 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Added border for contrast */
+}
+
+ul#users::-webkit-scrollbar-thumb {
+  background: linear-gradient(to right, #9c73ca, #7d4cc2);
+  border-radius: 10px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3); /* Added depth */
+}
+
+ul#users::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to right, #a565dd, #895cce);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.4);
 }
 
 ul#users li {
   flex-shrink: 0;
+  width: 180px; /* Fixed width for each user card */
 }
 
 ul#users li div {
   transition: all 0.3s ease;
+  width: 100%; /* Ensure div takes full width of li */
 }
 
 ul#users li div:hover {
@@ -26,5 +65,20 @@ ul#users li div:hover {
     flex-direction: column;
     padding: 0;
     gap: 0.75rem;
+    overflow-x: hidden; /* Disable horizontal scroll on desktop */
+    overflow-y: auto; /* Enable vertical scroll if needed */
+    width: 100%; /* Take full width */
+    height: 100%; /* Take available height */
+    scrollbar-width: thin;
+    padding-bottom: 0;
+  }
+
+  ul#users::-webkit-scrollbar {
+    width: 8px;
+    height: auto;
+  }
+
+  ul#users li {
+    width: auto; 
   }
 }
