@@ -58,3 +58,18 @@ div a:active span,
 div a.selected span {
   font-weight: 600;
 }
+
+.user-container {
+  position: relative; /* This creates the positioning context */
+  display: inline-block; /* Ensures proper sizing */
+  width: 100%; /* Takes full width of list item */
+}
+
+.user-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}

@@ -15,22 +15,45 @@ export class TooltipService {
   ): void {
     this.hide();
 
+    const hostElement = event.currentTarget as HTMLElement;
+
     const positionStrategy = this.overlay
       .position()
-      .flexibleConnectedTo({ x: event.clientX, y: event.clientY })
+      .flexibleConnectedTo(hostElement)
       .withPositions([
+        // Primary position - right of the element
+        {
+          originX: 'end',
+          originY: 'center',
+          overlayX: 'start',
+          overlayY: 'center',
+          offsetX: 8,
+        },
+        // Fallback position - left of the element
         {
           originX: 'start',
+          originY: 'center',
+          overlayX: 'end',
+          overlayY: 'center',
+          offsetX: -8,
+        },
+        // Mobile fallback - bottom of the element
+        {
+          originX: 'center',
           originY: 'bottom',
-          overlayX: 'start',
+          overlayX: 'center',
           overlayY: 'top',
           offsetY: 8,
         },
-      ]);
+      ])
+      .withFlexibleDimensions(true)
+      .withPush(true)
+      .withViewportMargin(8);
 
     this.overlayRef = this.overlay.create({
       positionStrategy,
       scrollStrategy: this.overlay.scrollStrategies.reposition(),
+      hasBackdrop: false,
     });
 
     const portal = new ComponentPortal(component);

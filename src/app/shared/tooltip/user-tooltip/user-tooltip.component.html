@@ -1,5 +1,10 @@
 <div class="user-tooltip">
-  <img [src]="user.avatar" [alt]="user.name" class="avatar" />
+  <img 
+    [src]="getSafeAvatar()" 
+    [alt]="user.name" 
+    class="avatar"
+    (error)="handleImageError($event)"
+  />
   <div class="details">
     <h4>{{ user.name }}</h4>
   </div>

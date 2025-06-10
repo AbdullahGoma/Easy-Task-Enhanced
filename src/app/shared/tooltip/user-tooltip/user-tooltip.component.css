@@ -3,6 +3,7 @@
   gap: 1rem;
   align-items: center;
 }
+
 .avatar {
   width: 60px;
   height: 60px;
@@ -10,20 +11,26 @@
   object-fit: cover;
   border: 2px solid #9965dd;
 }
+
 .details {
   display: flex;
   flex-direction: column;
 }
+
 h4 {
   margin: 0;
   color: #fff;
   font-size: 1.1rem;
 }
-.role {
-  color: #a78bc7;
-  margin: 0.2rem 0 0;
-}
-.email {
-  color: #c3b3d1;
-  margin: 0.2rem 0 0;
+
+@media (max-width: 768px) {
+  .user-tooltip {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .avatar {
+    width: 50px;
+    height: 50px;
+  }
 }
