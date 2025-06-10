@@ -1,5 +1,5 @@
 <div class="container">
-  <ul id="users">
+  <ul #usersContainer id="users">
     @for (user of users(); track user.id) {
       <li>
         <app-user [user]="user" />
