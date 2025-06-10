@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { UserComponent } from './user/user.component';
 import { UsersService } from './users.service';
-import { NoTaskComponent } from '../tasks/no-task/no-task.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -38,6 +37,8 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
   private lastMoveY = 0;
   private animationId: number | null = null;
   private isDesktop = false;
+  private isWheeling = false;
+  private wheelTimeout: any = null;
 
   // Circular scroll state
   private itemWidth = 180; // Width of each user card
@@ -90,21 +91,41 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
 
   private setupWheelListener() {
     const container = this.usersContainer.nativeElement;
-    const wheelSpeed = 0.5; // Adjust this value to control scroll speed
+    const wheelSpeed = 0.5;
 
     container.addEventListener(
       'wheel',
       (e) => {
         if (this.isDesktop) {
-          // Vertical scrolling for desktop
           if (container.scrollHeight > container.clientHeight) {
             e.preventDefault();
+            this.isWheeling = true;
+
+            // Clear any pending timeout
+            if (this.wheelTimeout) {
+              clearTimeout(this.wheelTimeout);
+            }
+
+            // Set timeout to reset isWheeling after wheel stops
+            this.wheelTimeout = setTimeout(() => {
+              this.isWheeling = false;
+            }, 100);
+
             container.scrollTop += e.deltaY * wheelSpeed;
           }
         } else {
-          // Horizontal scrolling for mobile
           if (container.scrollWidth > container.clientWidth) {
             e.preventDefault();
+            this.isWheeling = true;
+
+            if (this.wheelTimeout) {
+              clearTimeout(this.wheelTimeout);
+            }
+
+            this.wheelTimeout = setTimeout(() => {
+              this.isWheeling = false;
+            }, 100);
+
             container.scrollLeft += e.deltaY * wheelSpeed;
           }
         }
@@ -124,6 +145,9 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleCircularScroll() {
+    // Don't handle circular scroll during dragging or wheeling
+    if (this.isDragging || this.isWheeling) return;
+
     const container = this.usersContainer.nativeElement;
     const users = this.users();
 
@@ -134,34 +158,45 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
       const containerHeight = container.clientHeight;
       const totalHeight = users.length * (this.itemHeight + this.gap);
 
-      if (scrollTop <= 0) {
-        // Smoothly jump to bottom
+      // Add a buffer zone to prevent premature triggering
+      const buffer = 50; // pixels
+
+      if (scrollTop <= buffer) {
+        // Disable events temporarily to prevent recursion
+        this.isWheeling = true;
         container.scrollTo({
-          top: totalHeight - containerHeight,
+          top: totalHeight - containerHeight - buffer,
           behavior: 'smooth',
         });
-      } else if (scrollTop >= totalHeight - containerHeight) {
-        // Smoothly jump to top
+        setTimeout(() => (this.isWheeling = false), 500);
+      } else if (scrollTop >= totalHeight - containerHeight - buffer) {
+        this.isWheeling = true;
         container.scrollTo({
-          top: 0,
+          top: buffer,
           behavior: 'smooth',
         });
+        setTimeout(() => (this.isWheeling = false), 500);
       }
     } else {
       const scrollLeft = container.scrollLeft;
       const containerWidth = container.clientWidth;
       const totalWidth = users.length * (this.itemWidth + this.gap);
+      const buffer = 50;
 
-      if (scrollLeft <= 0) {
+      if (scrollLeft <= buffer) {
+        this.isWheeling = true;
         container.scrollTo({
-          left: totalWidth - containerWidth,
+          left: totalWidth - containerWidth - buffer,
           behavior: 'smooth',
         });
-      } else if (scrollLeft >= totalWidth - containerWidth) {
+        setTimeout(() => (this.isWheeling = false), 500);
+      } else if (scrollLeft >= totalWidth - containerWidth - buffer) {
+        this.isWheeling = true;
         container.scrollTo({
-          left: 0,
+          left: buffer,
           behavior: 'smooth',
         });
+        setTimeout(() => (this.isWheeling = false), 500);
       }
     }
   }
