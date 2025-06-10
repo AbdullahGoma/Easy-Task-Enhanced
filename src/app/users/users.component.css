@@ -1,7 +1,7 @@
 .container {
   width: 100%;
   display: grid;
-  overflow: auto; 
+  overflow: auto;
 }
 
 ul#users {
@@ -18,26 +18,28 @@ ul#users {
   padding-bottom: 1.5rem;
   scrollbar-color: #9c73ca #2c0a4c;
   -webkit-overflow-scrolling: touch;
+  will-change: transform;
+  cursor: grab;
 }
 
 /* Enhanced scrollbar styling */
 ul#users::-webkit-scrollbar {
-  height: 10px; /* Slightly taller for better visibility */
-  width: 10px; /* Added for cross-browser consistency */
+  height: 10px;
+  width: 10px;
 }
 
 ul#users::-webkit-scrollbar-track {
   background: rgba(44, 10, 76, 0.3);
   border-radius: 10px;
   margin: 0 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1); /* Added border for contrast */
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 ul#users::-webkit-scrollbar-thumb {
   background: linear-gradient(to right, #9c73ca, #7d4cc2);
   border-radius: 10px;
   border: 2px solid rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3); /* Added depth */
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
 ul#users::-webkit-scrollbar-thumb:hover {
@@ -47,12 +49,13 @@ ul#users::-webkit-scrollbar-thumb:hover {
 
 ul#users li {
   flex-shrink: 0;
-  width: 180px; /* Fixed width for each user card */
+  width: 180px;
+  scroll-snap-align: start;
 }
 
 ul#users li div {
   transition: all 0.3s ease;
-  width: 100%; /* Ensure div takes full width of li */
+  width: 100%;
 }
 
 ul#users li div:hover {
@@ -62,18 +65,21 @@ ul#users li div:hover {
 
 @media (min-width: 768px) {
   .container {
-    max-height: 40vh; 
+    max-height: 40vh;
+    height: 40vh;
   }
+
   ul#users {
     flex-direction: column;
     padding: 0;
     gap: 0.75rem;
-    overflow-x: hidden; /* Disable horizontal scroll on desktop */
-    overflow-y: auto; /* Enable vertical scroll if needed */
-    width: 100%; /* Take full width */
-    height: 100%; /* Take available height */
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
     scrollbar-width: thin;
     padding-bottom: 0;
+    scroll-snap-type: y mandatory;
   }
 
   ul#users::-webkit-scrollbar {
@@ -82,6 +88,6 @@ ul#users li div:hover {
   }
 
   ul#users li {
-    width: auto; 
+    width: auto;
   }
 }

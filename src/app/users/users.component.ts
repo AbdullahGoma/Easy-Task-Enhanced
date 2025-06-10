@@ -48,6 +48,7 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
     this.checkScreenSize();
     this.setupDragListeners();
     this.setupCircularScroll();
+    this.setupWheelListener();
   }
 
   ngOnDestroy() {
@@ -87,6 +88,31 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
     container.addEventListener('dragstart', (e) => e.preventDefault());
   }
 
+  private setupWheelListener() {
+    const container = this.usersContainer.nativeElement;
+    const wheelSpeed = 0.5; // Adjust this value to control scroll speed
+
+    container.addEventListener(
+      'wheel',
+      (e) => {
+        if (this.isDesktop) {
+          // Vertical scrolling for desktop
+          if (container.scrollHeight > container.clientHeight) {
+            e.preventDefault();
+            container.scrollTop += e.deltaY * wheelSpeed;
+          }
+        } else {
+          // Horizontal scrolling for mobile
+          if (container.scrollWidth > container.clientWidth) {
+            e.preventDefault();
+            container.scrollLeft += e.deltaY * wheelSpeed;
+          }
+        }
+      },
+      { passive: false }
+    );
+  }
+
   private setupCircularScroll() {
     const container = this.usersContainer.nativeElement;
 
@@ -104,30 +130,38 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
     if (!users || users.length === 0) return;
 
     if (this.isDesktop) {
-      // Vertical circular scroll for desktop
       const scrollTop = container.scrollTop;
       const containerHeight = container.clientHeight;
       const totalHeight = users.length * (this.itemHeight + this.gap);
 
       if (scrollTop <= 0) {
-        // At top, jump to bottom
-        container.scrollTop = totalHeight - containerHeight;
+        // Smoothly jump to bottom
+        container.scrollTo({
+          top: totalHeight - containerHeight,
+          behavior: 'smooth',
+        });
       } else if (scrollTop >= totalHeight - containerHeight) {
-        // At bottom, jump to top
-        container.scrollTop = 0;
+        // Smoothly jump to top
+        container.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
       }
     } else {
-      // Horizontal circular scroll for mobile
       const scrollLeft = container.scrollLeft;
       const containerWidth = container.clientWidth;
       const totalWidth = users.length * (this.itemWidth + this.gap);
 
       if (scrollLeft <= 0) {
-        // At left, jump to right
-        container.scrollLeft = totalWidth - containerWidth;
+        container.scrollTo({
+          left: totalWidth - containerWidth,
+          behavior: 'smooth',
+        });
       } else if (scrollLeft >= totalWidth - containerWidth) {
-        // At right, jump to left
-        container.scrollLeft = 0;
+        container.scrollTo({
+          left: 0,
+          behavior: 'smooth',
+        });
       }
     }
   }
