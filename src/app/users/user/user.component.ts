@@ -1,8 +1,9 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 import { type User } from './user.model';
 import { ImageStorageService } from '../../image-storage.service';
 import { RouterLink } from '@angular/router';
+
 
 @Component({
   selector: 'app-user',

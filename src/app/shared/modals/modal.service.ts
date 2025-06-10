@@ -1,12 +1,13 @@
 // modal.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, map } from 'rxjs';
+import { ModalType } from './modal-types';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ModalService {
-  private activeModals = new BehaviorSubject<string[]>([]);
+  private activeModals = new BehaviorSubject<ModalType[]>([]);
   private modalData = new BehaviorSubject<{ [key: string]: any }>({});
 
   // Use getters for better encapsulation
@@ -18,21 +19,21 @@ export class ModalService {
       );
   }
 
-  isModalOpen(modalName: string) {
+  isModalOpen(modalName: ModalType) {
     return this.activeModals.pipe(
       map((modals) => modals.includes(modalName)),
       distinctUntilChanged()
     );
   }
 
-  getModalData<T>(modalName: string) {
+  getModalData<T>(modalName: ModalType) {
     return this.modalData.pipe(
       map((data) => data[modalName] as T),
       distinctUntilChanged()
     );
   }
 
-  openModal(modalName: string, data?: any) {
+  openModal(modalName: ModalType, data?: any) {
     const currentModals = this.activeModals.value;
     if (!currentModals.includes(modalName)) {
       this.activeModals.next([...currentModals, modalName]);
@@ -45,7 +46,7 @@ export class ModalService {
     }
   }
 
-  closeModal(modalName: string) {
+  closeModal(modalName: ModalType) {
     const currentModals = this.activeModals.value;
     this.activeModals.next(currentModals.filter((m) => m !== modalName));
   }

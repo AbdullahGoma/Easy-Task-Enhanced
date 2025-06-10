@@ -26,6 +26,7 @@ import { ModalService } from '../../modal.service';
 import { Subject } from 'rxjs';
 import { ModalBackdropComponent } from "../../modal-backdrop.component";
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ModalType } from '../../modal-types';
 
 interface UserForm {
   name: FormControl<string | null>;
@@ -72,7 +73,7 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.modalService
-      .isModalOpen('addUser')
+      .isModalOpen(ModalType.AddUSER)
       .pipe(takeUntilDestroyed())
       .subscribe((open) => {
         this.isOpen = open;
@@ -224,20 +225,20 @@ export class AddUserModalComponent implements OnInit, OnDestroy {
           : this.sanitizer.sanitize(4, this.avatarPreview);
 
       if (url) {
-        this.modalService.openModal('imagePreview', url);
+        this.modalService.openModal(ModalType.ImagePreview, url);
       }
     }
   }
 
   // Check if the modal in the list (If the modal in the list will open)
   get IsModalOpen() {
-    return this.modalService.isModalOpen('addUser');
+    return this.modalService.isModalOpen(ModalType.AddUSER);
   }
 
   // Modal Management
   closeModal(): void {
     this.resetFormState();
-    this.modalService.closeModal('addUser');
+    this.modalService.closeModal(ModalType.AddUSER);
   }
 
   // Submit

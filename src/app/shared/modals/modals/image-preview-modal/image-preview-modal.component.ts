@@ -8,6 +8,7 @@ import {
 import { ModalService } from '../../modal.service';
 import { combineLatest } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ModalType } from '../../modal-types';
 
 @Component({
   selector: 'app-image-preview-modal',
@@ -27,8 +28,8 @@ export class ImagePreviewModalComponent {
 
   constructor() {
     combineLatest([
-      this.modalService.getModalData<string>('imagePreview'),
-      this.modalService.isModalOpen('imagePreview'),
+      this.modalService.getModalData<string>(ModalType.ImagePreview),
+      this.modalService.isModalOpen(ModalType.ImagePreview),
     ])
       .pipe(takeUntilDestroyed())
       .subscribe(([url, open]) => {
@@ -39,6 +40,6 @@ export class ImagePreviewModalComponent {
   }
 
   closeModal() {
-    this.modalService.closeModal('imagePreview');
+    this.modalService.closeModal(ModalType.ImagePreview);
   }
 }

@@ -3,6 +3,7 @@ import { ModalService } from '../../shared/modals/modal.service';
 import { UsersService } from '../../users/users.service';
 import { AddUserModalComponent } from "../../shared/modals/modals/add-user-modal/add-user-modal.component";
 import { ImagePreviewModalComponent } from "../../shared/modals/modals/image-preview-modal/image-preview-modal.component";
+import { ModalType } from '../../shared/modals/modal-types';
 
 @Component({
   selector: 'app-no-task',
@@ -16,7 +17,7 @@ export class NoTaskComponent {
   private usersService = inject(UsersService);
 
   openAddUserModal(): void {
-    this.modalService.openModal('addUser');
+    this.modalService.openModal(ModalType.AddUSER);
   }
 
   handleUserAdded(userData: { name: string; avatarData: string }): void {
