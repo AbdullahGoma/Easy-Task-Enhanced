@@ -42,7 +42,6 @@ interface UserForm {
     CommonModule,
     ReactiveFormsModule,
     ModalBackdropComponent,
-    AsyncPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
