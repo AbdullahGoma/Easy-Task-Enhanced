@@ -1,4 +1,3 @@
-// user.component.ts
 import { Component, input } from '@angular/core';
 import { type User } from './user.model';
 import { ImageStorageService } from '../../image-storage.service';
