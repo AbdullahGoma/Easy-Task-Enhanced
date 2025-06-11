@@ -9,17 +9,23 @@ import {
 import { UsersService } from '../users.service';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { TasksService } from '../../tasks/tasks.service';
+import { ModalType } from '../../shared/modals/modal-types';
+import { ModalService } from '../../shared/modals/modal.service';
+import { AddTaskModalComponent } from "../../shared/modals/modals/add-task-modal/add-task-modal.component";
 
 @Component({
   selector: 'app-user-tasks',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, AddTaskModalComponent],
   templateUrl: './user-tasks.component.html',
   styleUrl: './user-tasks.component.css',
 })
 export class UserTasksComponent implements OnInit {
   userId = input.required<string>(); // must be the same name of the name in path
   private usersService = inject(UsersService);
+  private tasksService = inject(TasksService);
+  private modalService = inject(ModalService);
 
   userName = computed(
     () =>
@@ -42,6 +48,25 @@ export class UserTasksComponent implements OnInit {
     });
 
     this.destroyRef(subscription);
+  }
+
+  openAddTaskModal(): void {
+    this.modalService.openModal(ModalType.AddTask);
+  }
+
+  handleTaskAdded(taskData: {
+    title: string;
+    summary: string;
+    dueDate: string;
+  }): void {
+    this.tasksService.addTask(
+      {
+        title: taskData.title,
+        summary: taskData.summary,
+        date: taskData.dueDate,
+      },
+      this.userId()
+    );
   }
 
   private destroyRef(subscription: Subscription) {

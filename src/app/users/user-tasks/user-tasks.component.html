@@ -2,9 +2,13 @@
   <header>
     <h2>{{ userNameUsingObservable }} Tasks</h2>
     <menu>
-      <a>Add Task</a>
+      <a (click)="openAddTaskModal()">Add Task</a>
     </menu>
   </header>
+
+  <app-add-task-modal 
+    (taskAdded)="handleTaskAdded($event)">
+  </app-add-task-modal>
 
   <router-outlet />
 </section>
