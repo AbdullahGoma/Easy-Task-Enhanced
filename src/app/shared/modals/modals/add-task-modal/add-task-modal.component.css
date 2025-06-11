@@ -187,3 +187,19 @@ textarea {
   resize: vertical;
   min-height: 100px;
 }
+
+.datetime-container {
+  display: flex;
+  gap: 1rem;
+}
+
+.datetime-container .form-group {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .datetime-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   EventEmitter,
   inject,
   OnInit,
@@ -27,6 +28,7 @@ interface TaskForm {
   title: FormControl<string | null>;
   summary: FormControl<string | null>;
   dueDate: FormControl<string | null>;
+  dueTime: FormControl<string | null>;
 }
 
 @Component({
@@ -42,15 +44,19 @@ export class AddTaskModalComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly modalService = inject(ModalService);
   private readonly cdRef = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Observable for modal state
   isOpen = false;
+  minDate: string;
+  currentTime: string;
 
   // Outputs
   @Output() taskAdded = new EventEmitter<{
     title: string;
     summary: string;
     dueDate: string;
+    dueTime: string;
   }>();
 
   // State
@@ -61,34 +67,52 @@ export class AddTaskModalComponent implements OnInit {
   taskForm!: FormGroup;
 
   constructor() {
-    this.modalService
-      .isModalOpen(ModalType.AddTask)
-      .pipe(takeUntilDestroyed())
-      .subscribe((open) => {
-        this.isOpen = open;
-        this.cdRef.markForCheck(); // Manually trigger change detection
-      });
+    // Set minimum date to today (YYYY-MM-DD format)
+    const now = new Date();
+    this.minDate = now.toISOString().split('T')[0];
+    this.currentTime = this.formatTime(now);
   }
 
   ngOnInit(): void {
     this.initializeForm();
+
+    this.modalService
+      .isModalOpen(ModalType.AddTask)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((open) => {
+        this.isOpen = open;
+        this.cdRef.markForCheck();
+      });
+  }
+
+  private formatTime(date: Date): string {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
   }
 
   private initializeForm(): void {
-    this.taskForm = this.fb.group<TaskForm>({
-      title: new FormControl('', [
-        Validators.required,
-        Validators.minLength(3),
-      ]),
-      summary: new FormControl('', [
-        Validators.required,
-        Validators.minLength(10),
-      ]),
-      dueDate: new FormControl('', [
-        Validators.required,
-        this.futureDateValidator(),
-      ]),
-    });
+    this.taskForm = this.fb.group<TaskForm>(
+      {
+        title: new FormControl('', [
+          Validators.required,
+          Validators.minLength(3),
+        ]),
+        summary: new FormControl('', [
+          Validators.required,
+          Validators.minLength(10),
+        ]),
+        dueDate: new FormControl('', [
+          Validators.required,
+          this.futureDateValidator(),
+        ]),
+        dueTime: new FormControl(this.currentTime, [
+          Validators.required,
+          this.futureTimeValidator(),
+        ]),
+      },
+      { validators: this.dateTimeValidator() }
+    );
   }
 
   private futureDateValidator(): ValidatorFn {
@@ -100,6 +124,47 @@ export class AddTaskModalComponent implements OnInit {
       today.setHours(0, 0, 0, 0);
 
       return selectedDate < today ? { pastDate: true } : null;
+    };
+  }
+
+  private futureTimeValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value || !this.taskForm) return null;
+
+      const dateValue = this.taskForm.get('dueDate')?.value;
+      if (!dateValue) return null;
+
+      const today = new Date().toISOString().split('T')[0];
+      if (dateValue !== today) return null;
+
+      const [hours, minutes] = control.value.split(':').map(Number);
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+
+      if (
+        hours < currentHours ||
+        (hours === currentHours && minutes <= currentMinutes)
+      ) {
+        return { pastTime: true };
+      }
+      return null;
+    };
+  }
+
+  private dateTimeValidator(): ValidatorFn {
+    return (group: AbstractControl): ValidationErrors | null => {
+      const dateControl = group.get('dueDate');
+      const timeControl = group.get('dueTime');
+
+      if (!dateControl?.value || !timeControl?.value) return null;
+
+      const selectedDate = new Date(
+        `${dateControl.value}T${timeControl.value}`
+      );
+      const now = new Date();
+
+      return selectedDate < now ? { pastDateTime: true } : null;
     };
   }
 
@@ -118,8 +183,14 @@ export class AddTaskModalComponent implements OnInit {
     return !!control?.errors?.[errorType];
   }
 
+  onDateChange() {
+    this.getControl('dueTime')?.updateValueAndValidity();
+  }
+
   private resetFormState(): void {
-    this.taskForm.reset();
+    this.taskForm.reset({
+      dueTime: this.currentTime,
+    });
     this.errorMessage = '';
   }
 
@@ -133,28 +204,29 @@ export class AddTaskModalComponent implements OnInit {
   addNewTask(): void {
     if (this.taskForm.invalid) {
       this.taskForm.markAllAsTouched();
-      this.cdRef.markForCheck(); // Manually trigger change detection
+      this.cdRef.markForCheck();
       return;
     }
 
     this.isSubmitting = true;
-    this.cdRef.markForCheck(); // Manually trigger change detection
+    this.cdRef.markForCheck();
 
     try {
       this.taskAdded.emit({
         title: this.taskForm.value.title,
         summary: this.taskForm.value.summary,
         dueDate: this.taskForm.value.dueDate,
+        dueTime: this.taskForm.value.dueTime,
       });
       this.closeModal();
     } catch (err) {
       this.errorMessage = `Error adding task: ${
         err instanceof Error ? err.message : 'Unknown error'
       }`;
-      this.cdRef.markForCheck(); // Manually trigger change detection
+      this.cdRef.markForCheck();
     } finally {
       this.isSubmitting = false;
-      this.cdRef.markForCheck(); // Manually trigger change detection
+      this.cdRef.markForCheck();
     }
   }
 }
