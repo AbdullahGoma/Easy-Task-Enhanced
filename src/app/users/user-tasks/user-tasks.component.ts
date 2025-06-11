@@ -7,12 +7,13 @@ import {
   OnInit,
 } from '@angular/core';
 import { UsersService } from '../users.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-tasks',
   standalone: true,
+  imports: [RouterOutlet],
   templateUrl: './user-tasks.component.html',
   styleUrl: './user-tasks.component.css',
 })
