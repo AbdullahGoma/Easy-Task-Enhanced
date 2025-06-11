@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { type User } from './user.model';
 import { ImageStorageService } from '../../image-storage.service';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 // import { TooltipDirective } from '../../shared/tooltip/tooltip.directive';
 // import { UserTooltipComponent } from '../../shared/tooltip/user-tooltip/user-tooltip.component';
 
@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
   standalone: true,
   imports: [
     RouterLink,
+    RouterLinkActive
     // TooltipDirective
   ],
   templateUrl: './user.component.html',
