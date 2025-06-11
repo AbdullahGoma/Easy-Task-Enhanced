@@ -15,12 +15,18 @@ export const routes: Routes = [
     children: [
       {
         path: 'tasks',
-        component: TasksComponent
+        component: TasksComponent,
+        children: [
+          {
+            path: '',
+            component: NewTaskComponent,
+          },
+        ],
       },
       {
         path: 'tasks/new',
-        component: NewTaskComponent
-      }
-    ]
+        component: NewTaskComponent,
+      },
+    ],
   },
 ];
