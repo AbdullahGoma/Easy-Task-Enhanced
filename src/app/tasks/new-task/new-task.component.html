@@ -41,44 +41,50 @@
   </p>
 
   <div class="datetime-container">
-    <p>
+    <div class="form-group">
       <label for="due-date">Due Date</label>
       <input
-        type="date"
-        id="due-date"
-        formControlName="dueDate"
-        [min]="minDate"
-        [class.invalid]="isFieldInvalid('dueDate')"
-        (change)="onDateChange()"
+      type="date"
+      id="task-due-date"
+      formControlName="dueDate"
+      [min]="minDate"
+      [class.invalid]="isFieldInvalid('dueDate')"
+      (change)="onDateChange()"
+      placeholder="Select date"
       />
       @if (isFieldInvalid('dueDate')) {
         <div class="error-message">
           @if (hasError('dueDate', 'required')) {
-            <span>Due date is required</span>
+          <div>📅 Date is required</div>
+          }
+          @if (hasError('dueDate', 'pastDate')) {
+          <div>⏱️ Must be today or future</div>
           }
         </div>
       }
-    </p>
+    </div>
 
-    <p>
+    <div class="form-group">
       <label for="due-time">Due Time</label>
       <input
-        type="time"
-        id="due-time"
-        formControlName="dueTime"
+      type="time"
+      id="task-due-time"
+      formControlName="dueTime"
+      placeholder="Select time"
+      step="300"
         [class.invalid]="isFieldInvalid('dueTime')"
       />
       @if (isFieldInvalid('dueTime')) {
         <div class="error-message">
           @if (hasError('dueTime', 'required')) {
-            <span>Due time is required</span>
-          }
-          @if (hasError('dueTime', 'pastTime')) {
-            <span>Time must be in the future for today</span>
-          }
+            <div>⏰ Time is required</div>
+            }
+            @if (hasError('dueTime', 'pastTime')) {
+            <div>⌛ Must be future time</div>
+            }
         </div>
       }
-    </p>
+    </div>
   </div>
 
   @if (taskForm.errors?.['pastDateTime']) {
