@@ -70,6 +70,7 @@ ul#users li div:hover {
 
   ul#users {
     flex-direction: column;
+    padding: 0;
     gap: 0.75rem;
     overflow-x: hidden;
     overflow-y: auto;
