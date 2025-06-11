@@ -1,0 +1,73 @@
+@if (isOpen) {
+<ng-container>
+  <app-modal-backdrop></app-modal-backdrop>
+
+  <dialog class="modal-dialog" [open]="isOpen">
+    <h2>Add New Task</h2>
+    <form [formGroup]="taskForm" (ngSubmit)="addNewTask()">
+      <div class="form-group">
+        <label for="task-title">Title</label>
+        <input type="text" id="task-title" formControlName="title" />
+        @if (isControlInvalid('title')) {
+        <div class="error-message">
+          @if (hasError('title', 'required')) {
+          <div>Title is required</div>
+          } @if (hasError('title', 'minlength')) {
+          <div>Title must be at least 3 characters</div>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="task-summary">Summary</label>
+        <textarea
+          id="task-summary"
+          rows="5"
+          formControlName="summary"
+        ></textarea>
+        @if (isControlInvalid('summary')) {
+        <div class="error-message">
+          @if (hasError('summary', 'required')) {
+          <div>Summary is required</div>
+          } @if (hasError('summary', 'minlength')) {
+          <div>Summary must be at least 10 characters</div>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="task-due-date">Due Date</label>
+        <input type="date" id="task-due-date" formControlName="dueDate" />
+        @if (isControlInvalid('dueDate')) {
+        <div class="error-message">
+          @if (hasError('dueDate', 'required')) {
+          <div>Due date is required</div>
+          } @if (hasError('dueDate', 'pastDate')) {
+          <div>Due date must be in the future</div>
+          }
+        </div>
+        }
+      </div>
+
+      @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
+      }
+
+      <div class="actions">
+        <button type="button" (click)="closeModal()" [disabled]="isSubmitting">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="taskForm.invalid || isSubmitting">
+          @if (!isSubmitting) {
+          <span>Add Task</span>
+          } @else {
+          <span>Adding...</span>
+          }
+        </button>
+      </div>
+    </form>
+  </dialog>
+</ng-container>
+}
