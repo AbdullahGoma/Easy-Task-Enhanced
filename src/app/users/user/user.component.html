@@ -1,6 +1,6 @@
 <!-- <div class="user-container" [appTooltip]="userTooltipComponent" [tooltipData]="{ user: user() }"> -->
 <div class="user-container">
-  <a routerLink="/tasks" routerLinkActive="selected" class="user-link">
+  <a [routerLink]="['/users', user().id]" routerLinkActive="selected" class="user-link">
     <img 
       [src]="getSafeAvatar()" 
       [alt]="user().name" 
