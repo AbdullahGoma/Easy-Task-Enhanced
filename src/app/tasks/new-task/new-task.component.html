@@ -49,14 +49,12 @@
         formControlName="dueDate"
         [min]="minDate"
         [class.invalid]="isFieldInvalid('dueDate')"
+        (change)="onDateChange()"
       />
       @if (isFieldInvalid('dueDate')) {
         <div class="error-message">
           @if (hasError('dueDate', 'required')) {
             <span>Due date is required</span>
-          }
-          @if (hasError('dueDate', 'pastDate')) {
-            <span>Due date/time must be in the future</span>
           }
         </div>
       }
@@ -69,17 +67,25 @@
         id="due-time"
         formControlName="dueTime"
         [class.invalid]="isFieldInvalid('dueTime')"
-        (change)="onTimeChange()"
       />
       @if (isFieldInvalid('dueTime')) {
         <div class="error-message">
           @if (hasError('dueTime', 'required')) {
             <span>Due time is required</span>
           }
+          @if (hasError('dueTime', 'pastTime')) {
+            <span>Time must be in the future for today</span>
+          }
         </div>
       }
     </p>
   </div>
+
+  @if (taskForm.errors?.['pastDateTime']) {
+    <div class="error-message">
+      <span>Due date and time must be in the future</span>
+    </div>
+  }
 
   <p class="actions">
     <button type="button" (click)="taskForm.reset({ dueTime: '12:00' })">Cancel</button>

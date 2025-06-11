@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -17,6 +17,7 @@ import { CommonModule } from '@angular/common';
   imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './new-task.component.html',
   styleUrl: './new-task.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewTaskComponent {
   userId = input.required<string>();
@@ -25,33 +26,75 @@ export class NewTaskComponent {
 
   taskForm: FormGroup;
   minDate: string;
+  currentTime: string;
 
   constructor() {
     // Set minimum date to today (YYYY-MM-DD format)
-    const today = new Date();
-    this.minDate = today.toISOString().split('T')[0];
+    const now = new Date();
+    this.minDate = now.toISOString().split('T')[0];
+    this.currentTime = this.formatTime(now);
 
-    this.taskForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      summary: ['', [Validators.required, Validators.minLength(10)]],
-      dueDate: ['', [Validators.required, this.futureDateValidator()]],
-      dueTime: ['12:00', [Validators.required]],
-    });
+    this.taskForm = this.fb.group(
+      {
+        title: ['', [Validators.required, Validators.minLength(3)]],
+        summary: ['', [Validators.required, Validators.minLength(10)]],
+        dueDate: ['', [Validators.required]],
+        dueTime: [
+          this.currentTime,
+          [Validators.required, this.futureTimeValidator()],
+        ],
+      },
+      { validators: this.dateTimeValidator() }
+    );
   }
 
-  // Custom validator for future date and time
-  private futureDateValidator(): ValidatorFn {
+  // Format time as HH:MM
+  private formatTime(date: Date): string {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  // Validator for time (when date is today)
+  private futureTimeValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (!control.value) return null;
+      if (!control.value || !this.taskForm) return null;
 
-      const dateValue = control.value;
-      const timeControl = this.taskForm?.get('dueTime');
-      const timeValue = timeControl?.value || '00:00';
+      const dateValue = this.taskForm.get('dueDate')?.value;
+      if (!dateValue) return null;
 
-      const selectedDateTime = new Date(`${dateValue}T${timeValue}`);
+      const today = new Date().toISOString().split('T')[0];
+      if (dateValue !== today) return null; // Only validate time if date is today
+
+      const [hours, minutes] = control.value.split(':').map(Number);
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+
+      if (
+        hours < currentHours ||
+        (hours === currentHours && minutes <= currentMinutes)
+      ) {
+        return { pastTime: true };
+      }
+      return null;
+    };
+  }
+
+  // Combined date-time validator
+  private dateTimeValidator(): ValidatorFn {
+    return (group: AbstractControl): ValidationErrors | null => {
+      const dateControl = group.get('dueDate');
+      const timeControl = group.get('dueTime');
+
+      if (!dateControl?.value || !timeControl?.value) return null;
+
+      const selectedDate = new Date(
+        `${dateControl.value}T${timeControl.value}`
+      );
       const now = new Date();
 
-      return selectedDateTime < now ? { pastDate: true } : null;
+      return selectedDate < now ? { pastDateTime: true } : null;
     };
   }
 
@@ -79,9 +122,8 @@ export class NewTaskComponent {
     return !!control?.errors?.[error];
   }
 
-  onTimeChange() {
-    // Revalidate date when time changes
-    this.dueDate?.updateValueAndValidity();
+  onDateChange() {
+    this.dueTime?.updateValueAndValidity();
   }
 
   onSubmit() {
@@ -90,20 +132,19 @@ export class NewTaskComponent {
       return;
     }
 
-    // Combine date and time for the final due datetime
-    const dueDateTime = `${this.taskForm.value.dueDate}T${this.taskForm.value.dueTime}:00`;
+    const dueDateTime = `${this.taskForm.value.dueDate}T${this.taskForm.value.dueTime}`;
 
     this.tasksService.addTask(
       {
         title: this.taskForm.value.title,
         summary: this.taskForm.value.summary,
-        date: dueDateTime, // Now includes time
+        date: dueDateTime,
       },
       this.userId()
     );
 
     this.taskForm.reset({
-      dueTime: '12:00', // Reset to default time
+      dueTime: this.currentTime, // Reset to current time
     });
   }
 }
