@@ -1,8 +1,23 @@
 <h2>Add Task</h2>
-<form (ngSubmit)="onSubmit()">
+<form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
   <p>
     <label for="title">Title</label>
-    <input type="text" id="title" name="title" [(ngModel)]="enteredTitle" />
+    <input 
+      type="text" 
+      id="title" 
+      formControlName="title" 
+      [class.invalid]="isFieldInvalid('title')"
+    />
+    @if (isFieldInvalid('title')) {
+      <div class="error-message">
+        @if (hasError('title', 'required')) {
+          <span>Title is required</span>
+        }
+        @if (hasError('title', 'minlength')) {
+          <span>Title must be at least 3 characters</span>
+        }
+      </div>
+    }
   </p>
 
   <p>
@@ -10,23 +25,64 @@
     <textarea
       id="summary"
       rows="5"
-      name="summary"
-      [(ngModel)]="enteredSummary"
+      formControlName="summary"
+      [class.invalid]="isFieldInvalid('summary')"
     ></textarea>
+    @if (isFieldInvalid('summary')) {
+      <div class="error-message">
+        @if (hasError('summary', 'required')) {
+          <span>Summary is required</span>
+        }
+        @if (hasError('summary', 'minlength')) {
+          <span>Summary must be at least 10 characters</span>
+        }
+      </div>
+    }
   </p>
 
-  <p>
-    <label for="due-date">Due Date</label>
-    <input
-      type="date"
-      id="due-date"
-      name="due-date"
-      [(ngModel)]="enteredDate"
-    />
-  </p>
+  <div class="datetime-container">
+    <p>
+      <label for="due-date">Due Date</label>
+      <input
+        type="date"
+        id="due-date"
+        formControlName="dueDate"
+        [min]="minDate"
+        [class.invalid]="isFieldInvalid('dueDate')"
+      />
+      @if (isFieldInvalid('dueDate')) {
+        <div class="error-message">
+          @if (hasError('dueDate', 'required')) {
+            <span>Due date is required</span>
+          }
+          @if (hasError('dueDate', 'pastDate')) {
+            <span>Due date/time must be in the future</span>
+          }
+        </div>
+      }
+    </p>
+
+    <p>
+      <label for="due-time">Due Time</label>
+      <input
+        type="time"
+        id="due-time"
+        formControlName="dueTime"
+        [class.invalid]="isFieldInvalid('dueTime')"
+        (change)="onTimeChange()"
+      />
+      @if (isFieldInvalid('dueTime')) {
+        <div class="error-message">
+          @if (hasError('dueTime', 'required')) {
+            <span>Due time is required</span>
+          }
+        </div>
+      }
+    </p>
+  </div>
 
   <p class="actions">
-    <a>Cancel</a>
-    <button type="submit">Create</button>
+    <button type="button" (click)="taskForm.reset({ dueTime: '12:00' })">Cancel</button>
+    <button type="submit" [disabled]="taskForm.invalid">Create</button>
   </p>
 </form>

@@ -92,3 +92,42 @@ button[type="submit"]:active {
     padding: 2rem;
   }
 }
+
+.invalid {
+  border-color: #ff6b6b;
+}
+
+.error-message {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.datetime-container {
+  display: flex;
+  gap: 1rem;
+}
+
+.datetime-container p {
+  flex: 1;
+}
+
+/* For mobile responsiveness */
+@media (max-width: 600px) {
+  .datetime-container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

@@ -7,7 +7,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { UsersService } from '../users.service';
-import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TasksService } from '../../tasks/tasks.service';
 import { ModalType } from '../../shared/modals/modal-types';
@@ -17,7 +17,7 @@ import { AddTaskModalComponent } from "../../shared/modals/modals/add-task-modal
 @Component({
   selector: 'app-user-tasks',
   standalone: true,
-  imports: [RouterOutlet, AddTaskModalComponent],
+  imports: [RouterOutlet, AddTaskModalComponent, RouterLink],
   templateUrl: './user-tasks.component.html',
   styleUrl: './user-tasks.component.css',
 })
