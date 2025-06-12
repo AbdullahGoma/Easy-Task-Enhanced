@@ -10,11 +10,12 @@ import {
 } from '@angular/forms';
 import { TasksService } from '../tasks.service';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-new-task',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink],
   templateUrl: './new-task.component.html',
   styleUrl: './new-task.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,6 +24,7 @@ export class NewTaskComponent {
   userId = input.required<string>();
   private tasksService = inject(TasksService);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
 
   taskForm: FormGroup;
   minDate: string;
@@ -145,6 +147,10 @@ export class NewTaskComponent {
 
     this.taskForm.reset({
       dueTime: this.currentTime, // Reset to current time
+    });
+
+    this.router.navigate(['/users', this.userId(), 'tasks'], {
+      replaceUrl: true, // Replace Url to make user not go back to the form again (We Can use it in login or signUp pages, Redirecting from a modal or stepper)
     });
   }
 }
