@@ -7,7 +7,14 @@ import {
   OnInit,
 } from '@angular/core';
 import { UsersService } from '../users.service';
-import { ActivatedRoute, RouterLink, RouterOutlet } from '@angular/router';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  ResolveFn,
+  RouterLink,
+  RouterOutlet,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TasksService } from '../../tasks/tasks.service';
 import { ModalType } from '../../shared/modals/modal-types';
@@ -28,7 +35,7 @@ export class UserTasksComponent implements OnInit {
   private tasksService = inject(TasksService);
   private modalService = inject(ModalService);
 
-  userName = computed(
+  userNameUsingIdInput = computed(
     () =>
       this.usersService.allUsers.find((user) => user.id === this.userId())?.name
   );
@@ -39,7 +46,10 @@ export class UserTasksComponent implements OnInit {
   userNameUsingObservable = '';
 
   ngOnInit(): void {
-    console.log(this.message() + '   ' , this.activatedRoute.snapshot.paramMap.get('userId')); // Not Reactive when changing users
+    console.log(
+      this.message() + '   ',
+      this.activatedRoute.snapshot.paramMap.get('userId')
+    ); // Not Reactive when changing users
 
     const subscription = this.activatedRoute.paramMap.subscribe({
       next: (paramMap) => {
@@ -52,6 +62,9 @@ export class UserTasksComponent implements OnInit {
 
     this.destroyRef(subscription);
   }
+
+  // Get User Name by third Way (Resolve in routes) that need a function (we add it in bottom) to get the name
+  userName = input.required<string>();
 
   openAddTaskModal(): void {
     this.modalService.openModal(ModalType.AddTask);
@@ -76,3 +89,15 @@ export class UserTasksComponent implements OnInit {
     this.destroyReference.onDestroy(() => subscription.unsubscribe());
   }
 }
+
+export const resolveUserName: ResolveFn<string> = (
+  activatedRoute: ActivatedRouteSnapshot,
+  routerState: RouterStateSnapshot
+) => {
+  const usersService = inject(UsersService);
+  const userName =
+    usersService.allUsers.find(
+      (user) => user.id === activatedRoute.paramMap.get('userId')
+    )?.name || '';
+  return userName;
+};
