@@ -200,3 +200,18 @@ export const resolveUserName: ResolveFn<string> = (
 
   return userName;
 };
+
+/**
+ * Route resolver function for title of the page.
+ * Demonstrates resolver pattern for adding dynamic title.
+ *
+ * @param route Current activated route snapshot
+ * @param state Current router state snapshot
+ * @returns Resolved title
+ */
+export const resolveTitle: ResolveFn<string> = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+) => {
+  return resolveUserName(route, state) + '\'s Tasks';
+};
