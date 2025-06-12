@@ -4,15 +4,15 @@
       <div class="controls">
         <a
           routerLink="./"
-          [queryParams]="{ order: orderParam === 'asc' ? 'desc' : 'asc' }"
+          [queryParams]="{ order: orderParam() === 'asc' ? 'desc' : 'asc' }"
           class="sort-button"
         >
           <span class="button-icon">{{
-            orderParam === "asc" ? "↑" : "↓"
+            orderParam() === "asc" ? "↑" : "↓"
           }}</span>
           <span class="button-text"
             >Sort
-            {{ orderParam === "asc" ? "Descending" : "Ascending" }}</span
+            {{ orderParam() === "asc" ? "Descending" : "Ascending" }}</span
           >
         </a>
       </div>

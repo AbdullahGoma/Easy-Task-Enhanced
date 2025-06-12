@@ -5,6 +5,7 @@ import {
   inject,
   input,
   OnInit,
+  signal,
 } from '@angular/core';
 
 import { TaskComponent } from './task/task.component';
@@ -26,17 +27,20 @@ export class TasksComponent implements OnInit {
   userTasks = computed(() => {
     return this.tastsService
       .allTasks()
-      .filter((task) => task.userId === this.userId());
+      .filter((task) => task.userId === this.userId())
+      .sort((a, b) => {
+        return this.orderParam() === 'desc' && a.id > b.id ? -1 : 1; 
+      });
   });
 
   // Using Observable
   private activatedRoute = inject(ActivatedRoute);
   private destroyReference = inject(DestroyRef);
-  orderParam?: 'asc' | 'desc';
+  orderParam = signal<'asc' | 'desc'>('desc');
 
   ngOnInit(): void {
     const subscription = this.activatedRoute.queryParams.subscribe({
-      next: (params) => (this.orderParam = params['order']),
+      next: (params) => this.orderParam.set(params['order']),
     });
 
     this.destroyRef(subscription);
