@@ -58,18 +58,3 @@ export const routes: Routes = [
     component: NotFoundComponent,
   },
 ];
-
-// export const canLeaveEditPage: CanDeactivateFn<NewTaskComponent> = (
-//   component: NewTaskComponent
-// ) => {
-//   if (!component) {
-//     return true; // If component doesn't exist, allow navigation
-//   }
-
-//   // Check if form exists and is dirty
-//   const shouldConfirm = component.taskForm?.dirty;
-
-//   return shouldConfirm
-//     ? confirm('Do you really want to leave? You will lose unsaved changes.')
-//     : true;
-// };

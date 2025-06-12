@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { TasksService } from '../tasks.service';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { CanDeactivateFn, Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-new-task',
@@ -29,6 +29,7 @@ export class NewTaskComponent {
   taskForm: FormGroup;
   minDate: string;
   currentTime: string;
+  submitted = signal(false);
 
   constructor() {
     // Set minimum date to today (YYYY-MM-DD format)
@@ -149,8 +150,18 @@ export class NewTaskComponent {
       dueTime: this.currentTime, // Reset to current time
     });
 
+    this.submitted.set(true);
+
     this.router.navigate(['/users', this.userId(), 'tasks'], {
       replaceUrl: true, // Replace Url to make user not go back to the form again (We Can use it in login or signUp pages, Redirecting from a modal or stepper)
     });
   }
 }
+
+export const canLeaveEditPage: CanDeactivateFn<NewTaskComponent> = (
+  component: NewTaskComponent
+) => {
+  return !component.submitted()
+    ? confirm('Do you realy want to leave?')
+    : true;
+};
