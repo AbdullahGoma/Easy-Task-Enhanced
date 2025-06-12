@@ -23,6 +23,7 @@ import { AddTaskModalComponent } from '../../shared/modals/modals/add-task-modal
 })
 export class UserTasksComponent implements OnInit {
   userId = input.required<string>(); // must be the same name of the name in path
+  message = input.required<string>(); // message that added as data in routes
   private usersService = inject(UsersService);
   private tasksService = inject(TasksService);
   private modalService = inject(ModalService);
@@ -38,7 +39,7 @@ export class UserTasksComponent implements OnInit {
   userNameUsingObservable = '';
 
   ngOnInit(): void {
-    console.log(this.activatedRoute.snapshot.paramMap.get('userId')); // Not Reactive when changing users
+    console.log(this.message() + '   ' , this.activatedRoute.snapshot.paramMap.get('userId')); // Not Reactive when changing users
 
     const subscription = this.activatedRoute.paramMap.subscribe({
       next: (paramMap) => {
