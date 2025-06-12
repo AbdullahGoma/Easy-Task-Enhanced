@@ -5,6 +5,7 @@ import {
   inject,
   input,
   OnInit,
+  signal,
 } from '@angular/core';
 import { UsersService } from '../users.service';
 import {
@@ -15,61 +16,97 @@ import {
   RouterOutlet,
   RouterStateSnapshot,
 } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { TasksService } from '../../tasks/tasks.service';
 import { ModalType } from '../../shared/modals/modal-types';
 import { ModalService } from '../../shared/modals/modal.service';
 import { AddTaskModalComponent } from '../../shared/modals/modals/add-task-modal/add-task-modal.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
 
+/**
+ * Component for displaying and managing tasks for a specific user.
+ *
+ * Features:
+ * - Displays user-specific tasks
+ * - Provides multiple ways to get user name (input, observable, resolver)
+ * - Handles task creation via modal
+ * - Implements proper cleanup of subscriptions
+ */
 @Component({
   selector: 'app-user-tasks',
   standalone: true,
-  imports: [RouterOutlet, AddTaskModalComponent, RouterLink],
+  imports: [CommonModule, RouterOutlet, AddTaskModalComponent, RouterLink],
   templateUrl: './user-tasks.component.html',
   styleUrl: './user-tasks.component.css',
 })
 export class UserTasksComponent implements OnInit {
-  userId = input.required<string>(); // must be the same name of the name in path
-  message = input.required<string>(); // message that added as data in routes
-  private usersService = inject(UsersService);
-  private tasksService = inject(TasksService);
-  private modalService = inject(ModalService);
+  //region Inputs
+  /**
+   * The ID of the user whose tasks are being displayed.
+   * Required input that must match the route parameter name.
+   */
+  userId = input.required<string>();
 
-  userNameUsingIdInput = computed(
-    () =>
-      this.usersService.allUsers.find((user) => user.id === this.userId())?.name
-  );
+  /**
+   * Optional message passed through route data.
+   * Demonstrates route data injection as an input.
+   */
+  message = input<string>('');
 
-  // Extract Dynamic route parameter as input Using Observable
-  private activatedRoute = inject(ActivatedRoute); // Have a pointer to the class loaded
-  private destroyReference = inject(DestroyRef);
-  userNameUsingObservable = '';
-
-  ngOnInit(): void {
-    console.log(
-      this.message() + '   ',
-      this.activatedRoute.snapshot.paramMap.get('userId')
-    ); // Not Reactive when changing users
-
-    const subscription = this.activatedRoute.paramMap.subscribe({
-      next: (paramMap) => {
-        this.userNameUsingObservable =
-          this.usersService.allUsers.find(
-            (user) => user.id === paramMap.get('userId')
-          )?.name || '';
-      },
-    });
-
-    this.destroyRef(subscription);
-  }
-
-  // Get User Name by third Way (Resolve in routes) that need a function (we add it in bottom) to get the name
+  /**
+   * User name resolved via route resolver.
+   * Demonstrates alternative pattern for route data.
+   */
   userName = input.required<string>();
+  //endregion
 
+  //region Services
+  private readonly usersService = inject(UsersService);
+  private readonly tasksService = inject(TasksService);
+  private readonly modalService = inject(ModalService);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+  //endregion
+
+  //region Computed Properties
+  /**
+   * Gets the user name using the input userId.
+   * Reactive computed property that updates when userId changes.
+   */
+  readonly userNameUsingIdInput = computed(() => {
+    return (
+      this.usersService.allUsers.find((user) => user.id === this.userId())
+        ?.name ?? 'Unknown User'
+    );
+  });
+
+  /**
+   * Signal for the user name obtained via route params observable.
+   * Demonstrates alternative approach to getting route parameters.
+   */
+  readonly userNameUsingObservable = signal<string>('');
+
+
+  //region Lifecycle Hooks
+  ngOnInit(): void {
+    this.initializeRouteParamSubscription();
+    this.logInitialRouteData();
+  }
+  //endregion
+
+  //region Public Methods
+  /**
+   * Opens the add task modal.
+   * Demonstrates modal service usage.
+   */
   openAddTaskModal(): void {
     this.modalService.openModal(ModalType.AddTask);
   }
 
+  /**
+   * Handles task addition from the modal.
+   * @param taskData The task data from the modal form
+   */
   handleTaskAdded(taskData: {
     title: string;
     summary: string;
@@ -84,20 +121,70 @@ export class UserTasksComponent implements OnInit {
       this.userId()
     );
   }
+  //endregion
 
-  private destroyRef(subscription: Subscription) {
-    this.destroyReference.onDestroy(() => subscription.unsubscribe());
+  //region Private Methods
+  /**
+   * Initializes subscription to route parameters.
+   * Demonstrates proper subscription cleanup.
+   */
+  private initializeRouteParamSubscription(): void {
+    this.activatedRoute.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (paramMap) => {
+          const userName =
+            this.usersService.allUsers.find(
+              (user) => user.id === paramMap.get('userId')
+            )?.name || '';
+          this.userNameUsingObservable.set(userName);
+        },
+        error: (err) =>
+          console.error('Error in route param subscription:', err),
+      });
+  }
+
+  /**
+   * Logs initial route data for debugging.
+   * Demonstrates access to snapshot data.
+   */
+  private logInitialRouteData(): void {
+    console.log(
+      'Initial route data - message:',
+      this.message(),
+      'userId param:',
+      this.activatedRoute.snapshot.paramMap.get('userId')
+    );
   }
 }
 
+/**
+ * Route resolver function for user name.
+ * Demonstrates resolver pattern for route data.
+ *
+ * @param route Current activated route snapshot
+ * @param state Current router state snapshot
+ * @returns Resolved user name
+ */
 export const resolveUserName: ResolveFn<string> = (
-  activatedRoute: ActivatedRouteSnapshot,
-  routerState: RouterStateSnapshot
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
 ) => {
   const usersService = inject(UsersService);
-  const userName =
-    usersService.allUsers.find(
-      (user) => user.id === activatedRoute.paramMap.get('userId')
-    )?.name || '';
+  const userId = route.paramMap.get('userId');
+
+  if (!userId) {
+    throw new Error('User ID not found in route parameters');
+  }
+
+  const userName = usersService.allUsers.find(
+    (user) => user.id === userId
+  )?.name;
+
+  if (!userName) {
+    console.warn(`User not found with ID: ${userId}`);
+    return 'Unknown User';
+  }
+
   return userName;
 };
