@@ -28,7 +28,7 @@ import { CommonModule } from '@angular/common';
  *
  * Features:
  * - Displays user-specific tasks
- * - Provides multiple ways to get user name (input, observable, resolver)
+ * - Provides multiple ways to get user name (input, observable, resolver or ActivatedRoute.data(access dynamic and static))
  * - Handles task creation via modal
  * - Implements proper cleanup of subscriptions
  */
@@ -86,10 +86,10 @@ export class UserTasksComponent implements OnInit {
    */
   readonly userNameUsingObservable = signal<string>('');
 
-
   //region Lifecycle Hooks
   ngOnInit(): void {
     this.initializeRouteParamSubscription();
+    this.accessRouteData();
     this.logInitialRouteData();
   }
   //endregion
@@ -141,6 +141,18 @@ export class UserTasksComponent implements OnInit {
         },
         error: (err) =>
           console.error('Error in route param subscription:', err),
+      });
+  }
+
+  /**
+   * Access Route Data In Coponents.
+   * Demonstrates that it can access data (static) and resolve (dynamic) that in routes.
+   */
+  private accessRouteData(): void {
+    this.activatedRoute.data
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => console.log(data),
       });
   }
 
