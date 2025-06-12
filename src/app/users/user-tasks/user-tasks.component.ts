@@ -38,6 +38,8 @@ export class UserTasksComponent implements OnInit {
   userNameUsingObservable = '';
 
   ngOnInit(): void {
+    console.log(this.activatedRoute.snapshot.paramMap.get('userId')); // Not Reactive when changing users
+    
     const subscription = this.activatedRoute.paramMap.subscribe({
       next: (paramMap) => {
         this.userNameUsingObservable =
