@@ -12,7 +12,7 @@ import { Subscription } from 'rxjs';
 import { TasksService } from '../../tasks/tasks.service';
 import { ModalType } from '../../shared/modals/modal-types';
 import { ModalService } from '../../shared/modals/modal.service';
-import { AddTaskModalComponent } from "../../shared/modals/modals/add-task-modal/add-task-modal.component";
+import { AddTaskModalComponent } from '../../shared/modals/modals/add-task-modal/add-task-modal.component';
 
 @Component({
   selector: 'app-user-tasks',
@@ -39,7 +39,7 @@ export class UserTasksComponent implements OnInit {
 
   ngOnInit(): void {
     console.log(this.activatedRoute.snapshot.paramMap.get('userId')); // Not Reactive when changing users
-    
+
     const subscription = this.activatedRoute.paramMap.subscribe({
       next: (paramMap) => {
         this.userNameUsingObservable =

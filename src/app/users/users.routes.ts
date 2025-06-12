@@ -12,12 +12,6 @@ export const routes: Routes = [
   {
     path: 'tasks',
     component: TasksComponent,
-    children: [
-      {
-        path: '',
-        component: NewTaskComponent,
-      },
-    ],
   },
   {
     path: 'tasks/new',
