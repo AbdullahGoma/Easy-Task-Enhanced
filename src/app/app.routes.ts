@@ -1,9 +1,4 @@
-import {
-  CanMatchFn,
-  RedirectCommand,
-  Router,
-  Routes,
-} from '@angular/router';
+import { CanMatchFn, RedirectCommand, Router, Routes } from '@angular/router';
 
 import { NoTaskComponent } from './tasks/no-task/no-task.component';
 import {
@@ -13,6 +8,7 @@ import {
 } from './users/user-tasks/user-tasks.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { inject } from '@angular/core';
+import { TasksService } from './tasks/tasks.service';
 
 const dummyCanMatch: CanMatchFn = (route, segmants) => {
   const router = inject(Router);
@@ -23,38 +19,44 @@ const dummyCanMatch: CanMatchFn = (route, segmants) => {
 };
 
 export const routes: Routes = [
-  // Starting Page so, it does not need to lazy loading
   {
     path: '',
-    component: NoTaskComponent,
+    providers: [TasksService],
     children: [
+      // Starting Page so, it does not need to lazy loading
       {
-        // Redirect users to ''
-        path: 'users',
-        redirectTo: '',
-        pathMatch: 'prefix',
+        path: '',
+        component: NoTaskComponent,
+        children: [
+          {
+            // Redirect users to ''
+            path: 'users',
+            redirectTo: '',
+            pathMatch: 'prefix',
+          },
+        ],
+        title: 'No Task', // static title
+      },
+      {
+        path: 'users/:userId',
+        component: UserTasksComponent,
+        // Guard is guard the route and it's children
+        canMatch: [dummyCanMatch],
+        // Lazy Loading Children
+        loadChildren: () =>
+          import('./users/users.routes').then((module) => module.routes),
+        data: {
+          message: 'Hello!',
+        },
+        resolve: {
+          userName: resolveUserName,
+        },
+        title: resolveTitle,
+      },
+      {
+        path: '**',
+        component: NotFoundComponent,
       },
     ],
-    title: 'No Task', // static title
-  },
-  {
-    path: 'users/:userId',
-    component: UserTasksComponent,
-    // Guard is guard the route and it's children
-    canMatch: [dummyCanMatch],
-    // Lazy Loading Children
-    loadChildren: () =>
-      import('./users/users.routes').then((module) => module.routes),
-    data: {
-      message: 'Hello!',
-    },
-    resolve: {
-      userName: resolveUserName,
-    },
-    title: resolveTitle,
-  },
-  {
-    path: '**',
-    component: NotFoundComponent,
   },
 ];
