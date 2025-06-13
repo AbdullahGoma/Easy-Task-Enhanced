@@ -1,12 +1,10 @@
 import {
-  CanDeactivateFn,
   CanMatchFn,
   RedirectCommand,
   Router,
   Routes,
 } from '@angular/router';
 
-import { routes as userRoutes } from './users/users.routes';
 import { NoTaskComponent } from './tasks/no-task/no-task.component';
 import {
   resolveTitle,
@@ -15,15 +13,14 @@ import {
 } from './users/user-tasks/user-tasks.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { inject } from '@angular/core';
-import { NewTaskComponent } from './tasks/new-task/new-task.component';
 
-// const dummyCanMatch: CanMatchFn = (route, segmants) => {
-//   const router = inject(Router);
-//   const shouldGetAccess = Math.random();
-//   return shouldGetAccess < 0.5
-//     ? true
-//     : new RedirectCommand(router.parseUrl('/unauthorized'));
-// };
+const dummyCanMatch: CanMatchFn = (route, segmants) => {
+  const router = inject(Router);
+  const shouldGetAccess = Math.random();
+  return shouldGetAccess < 1
+    ? true
+    : new RedirectCommand(router.parseUrl('/unauthorized'));
+};
 
 export const routes: Routes = [
   // Starting Page so, it does not need to lazy loading
@@ -44,8 +41,10 @@ export const routes: Routes = [
     path: 'users/:userId',
     component: UserTasksComponent,
     // Guard is guard the route and it's children
-    // canMatch: [dummyCanMatch],
-    children: userRoutes,
+    canMatch: [dummyCanMatch],
+    // Lazy Loading Children
+    loadChildren: () =>
+      import('./users/users.routes').then((module) => module.routes),
     data: {
       message: 'Hello!',
     },
