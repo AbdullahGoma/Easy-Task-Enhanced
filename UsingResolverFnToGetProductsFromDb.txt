@@ -1,0 +1,448 @@
+// product.model.ts
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  description: string;
+  createdDate: Date;
+}
+
+export interface ProductSearchParams {
+  search?: string;
+  sortBy?: 'name' | 'price' | 'createdDate';
+  sortOrder?: 'asc' | 'desc';
+  category?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+// products.service.ts
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Product, ProductSearchParams } from './product.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ProductsService {
+  private http = inject(HttpClient);
+  private baseUrl = 'https://your-api-url/api/products';
+
+  getProducts(params: ProductSearchParams = {}): Observable<Product[]> {
+    let httpParams = new HttpParams();
+    
+    if (params.search) {
+      httpParams = httpParams.set('search', params.search);
+    }
+    if (params.sortBy) {
+      httpParams = httpParams.set('sortBy', params.sortBy);
+    }
+    if (params.sortOrder) {
+      httpParams = httpParams.set('sortOrder', params.sortOrder);
+    }
+    if (params.category) {
+      httpParams = httpParams.set('category', params.category);
+    }
+    if (params.page) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+    if (params.pageSize) {
+      httpParams = httpParams.set('pageSize', params.pageSize.toString());
+    }
+
+    return this.http.get<Product[]>(this.baseUrl, { params: httpParams });
+  }
+}
+
+// products.resolver.ts
+import { inject } from '@angular/core';
+import { ResolveFn } from '@angular/router';
+import { Product, ProductSearchParams } from './product.model';
+import { ProductsService } from './products.service';
+
+export const resolveProducts: ResolveFn<Product[]> = (
+  activatedRouteSnapshot,
+  routerState
+) => {
+  const productsService = inject(ProductsService);
+  
+  // Extract query parameters
+  const queryParams = activatedRouteSnapshot.queryParams;
+  
+  const searchParams: ProductSearchParams = {
+    search: queryParams['search'] || undefined,
+    sortBy: queryParams['sortBy'] || 'name',
+    sortOrder: queryParams['sortOrder'] || 'asc',
+    category: queryParams['category'] || undefined,
+    page: queryParams['page'] ? parseInt(queryParams['page']) : 1,
+    pageSize: queryParams['pageSize'] ? parseInt(queryParams['pageSize']) : 10
+  };
+
+  return productsService.getProducts(searchParams);
+};
+
+// products.component.ts
+import { Component, inject, input, signal, computed } from '@angular/core';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Product, ProductSearchParams } from './product.model';
+
+@Component({
+  selector: 'app-products',
+  standalone: true,
+  templateUrl: './products.component.html',
+  styleUrls: ['./products.component.css'],
+  imports: [CommonModule, FormsModule, RouterLink]
+})
+export class ProductsComponent {
+  products = input.required<Product[]>();
+  
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
+  
+  // Form controls
+  searchTerm = signal('');
+  selectedCategory = signal('');
+  sortBy = signal<'name' | 'price' | 'createdDate'>('name');
+  sortOrder = signal<'asc' | 'desc'>('asc');
+  
+  // Available categories (could also come from resolver)
+  categories = computed(() => {
+    const allCategories = this.products().map(p => p.category);
+    return [...new Set(allCategories)];
+  });
+
+  onSearch() {
+    this.updateUrl();
+  }
+
+  onSortChange() {
+    this.updateUrl();
+  }
+
+  onCategoryChange() {
+    this.updateUrl();
+  }
+
+  clearFilters() {
+    this.searchTerm.set('');
+    this.selectedCategory.set('');
+    this.sortBy.set('name');
+    this.sortOrder.set('asc');
+    this.updateUrl();
+  }
+
+  private updateUrl() {
+    const queryParams: any = {};
+    
+    if (this.searchTerm()) {
+      queryParams.search = this.searchTerm();
+    }
+    if (this.selectedCategory()) {
+      queryParams.category = this.selectedCategory();
+    }
+    if (this.sortBy() !== 'name') {
+      queryParams.sortBy = this.sortBy();
+    }
+    if (this.sortOrder() !== 'asc') {
+      queryParams.sortOrder = this.sortOrder();
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams,
+      queryParamsHandling: 'replace'
+    });
+  }
+}
+
+// app.routes.ts
+import { Routes } from '@angular/router';
+import { resolveProducts } from './products/products.resolver';
+
+export const routes: Routes = [
+  {
+    path: 'products',
+    loadComponent: () =>
+      import('./products/products.component').then(
+        (module) => module.ProductsComponent
+      ),
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange', // Important for query param changes
+    resolve: {
+      products: resolveProducts,
+    },
+  },
+  // ... other routes
+];
+
+// products.component.html
+<div class="products-container">
+  <div class="filters-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (keyup.enter)="onSearch()"
+        placeholder="Search products..."
+        class="form-control">
+      <button (click)="onSearch()" class="btn btn-primary">Search</button>
+    </div>
+
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedCategory" (change)="onCategoryChange()" class="form-select">
+        <option value="">All Categories</option>
+        <option *ngFor="let category of categories()" [value]="category">
+          {{ category }}
+        </option>
+      </select>
+
+      <select [(ngModel)]="sortBy" (change)="onSortChange()" class="form-select">
+        <option value="name">Sort by Name</option>
+        <option value="price">Sort by Price</option>
+        <option value="createdDate">Sort by Date</option>
+      </select>
+
+      <select [(ngModel)]="sortOrder" (change)="onSortChange()" class="form-select">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+
+      <button (click)="clearFilters()" class="btn btn-secondary">Clear Filters</button>
+    </div>
+  </div>
+
+  <div class="products-grid">
+    <div *ngFor="let product of products()" class="product-card">
+      <h3>{{ product.name }}</h3>
+      <p class="price">${{ product.price }}</p>
+      <p class="category">{{ product.category }}</p>
+      <p class="description">{{ product.description }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="products().length === 0" class="no-results">
+    No products found matching your criteria.
+  </div>
+</div>
+
+
+
+
+
+
+.......................Net...........
+
+
+// Models/Product.cs
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime CreatedDate { get; set; }
+}
+
+// Models/ProductSearchParams.cs
+public class ProductSearchParams
+{
+    public string? Search { get; set; }
+    public string? SortBy { get; set; } = "name";
+    public string? SortOrder { get; set; } = "asc";
+    public string? Category { get; set; }
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+}
+
+// Services/IProductService.cs
+public interface IProductService
+{
+    Task<IEnumerable<Product>> GetProductsAsync(ProductSearchParams searchParams);
+    Task<int> GetTotalCountAsync(ProductSearchParams searchParams);
+}
+
+// Services/ProductService.cs
+public class ProductService : IProductService
+{
+    private readonly IProductRepository _productRepository;
+
+    public ProductService(IProductRepository productRepository)
+    {
+        _productRepository = productRepository;
+    }
+
+    public async Task<IEnumerable<Product>> GetProductsAsync(ProductSearchParams searchParams)
+    {
+        var query = await _productRepository.GetQueryableAsync();
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(searchParams.Search))
+        {
+            var searchTerm = searchParams.Search.ToLower();
+            query = query.Where(p => 
+                p.Name.ToLower().Contains(searchTerm) || 
+                p.Description.ToLower().Contains(searchTerm));
+        }
+
+        // Apply category filter
+        if (!string.IsNullOrWhiteSpace(searchParams.Category))
+        {
+            query = query.Where(p => p.Category == searchParams.Category);
+        }
+
+        // Apply sorting
+        query = ApplySorting(query, searchParams.SortBy, searchParams.SortOrder);
+
+        // Apply pagination
+        var skip = (searchParams.Page - 1) * searchParams.PageSize;
+        query = query.Skip(skip).Take(searchParams.PageSize);
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<int> GetTotalCountAsync(ProductSearchParams searchParams)
+    {
+        var query = await _productRepository.GetQueryableAsync();
+
+        // Apply same filters for count
+        if (!string.IsNullOrWhiteSpace(searchParams.Search))
+        {
+            var searchTerm = searchParams.Search.ToLower();
+            query = query.Where(p => 
+                p.Name.ToLower().Contains(searchTerm) || 
+                p.Description.ToLower().Contains(searchTerm));
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchParams.Category))
+        {
+            query = query.Where(p => p.Category == searchParams.Category);
+        }
+
+        return await query.CountAsync();
+    }
+
+    private IQueryable<Product> ApplySorting(IQueryable<Product> query, string? sortBy, string? sortOrder)
+    {
+        var isDescending = sortOrder?.ToLower() == "desc";
+
+        return sortBy?.ToLower() switch
+        {
+            "price" => isDescending ? query.OrderByDescending(p => p.Price) : query.OrderBy(p => p.Price),
+            "createddate" => isDescending ? query.OrderByDescending(p => p.CreatedDate) : query.OrderBy(p => p.CreatedDate),
+            "name" or _ => isDescending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name)
+        };
+    }
+}
+
+// Controllers/ProductsController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    private readonly IProductService _productService;
+
+    public ProductsController(IProductService productService)
+    {
+        _productService = productService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] ProductSearchParams searchParams)
+    {
+        try
+        {
+            var products = await _productService.GetProductsAsync(searchParams);
+            var totalCount = await _productService.GetTotalCountAsync(searchParams);
+
+            // Add pagination info to response headers
+            Response.Headers.Add("X-Total-Count", totalCount.ToString());
+            Response.Headers.Add("X-Page", searchParams.Page.ToString());
+            Response.Headers.Add("X-Page-Size", searchParams.PageSize.ToString());
+
+            return Ok(products);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            return StatusCode(500, "An error occurred while fetching products");
+        }
+    }
+
+    [HttpGet("categories")]
+    public async Task<ActionResult<IEnumerable<string>>> GetCategories()
+    {
+        try
+        {
+            var query = await _productRepository.GetQueryableAsync();
+            var categories = await query.Select(p => p.Category).Distinct().ToListAsync();
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "An error occurred while fetching categories");
+        }
+    }
+}
+
+// Repository/IProductRepository.cs
+public interface IProductRepository
+{
+    Task<IQueryable<Product>> GetQueryableAsync();
+    Task<Product?> GetByIdAsync(int id);
+    Task<Product> AddAsync(Product product);
+    Task<Product> UpdateAsync(Product product);
+    Task DeleteAsync(int id);
+}
+
+// Repository/ProductRepository.cs (Entity Framework example)
+public class ProductRepository : IProductRepository
+{
+    private readonly AppDbContext _context;
+
+    public ProductRepository(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IQueryable<Product>> GetQueryableAsync()
+    {
+        return _context.Products.AsQueryable();
+    }
+
+    public async Task<Product?> GetByIdAsync(int id)
+    {
+        return await _context.Products.FindAsync(id);
+    }
+
+    public async Task<Product> AddAsync(Product product)
+    {
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+        return product;
+    }
+
+    public async Task<Product> UpdateAsync(Product product)
+    {
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync();
+        return product;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var product = await GetByIdAsync(id);
+        if (product != null)
+        {
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+        }
+    }
+}
+
+// Program.cs (Dependency Injection)
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
