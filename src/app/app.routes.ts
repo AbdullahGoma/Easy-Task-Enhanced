@@ -26,6 +26,7 @@ import { NewTaskComponent } from './tasks/new-task/new-task.component';
 // };
 
 export const routes: Routes = [
+  // Starting Page so, it does not need to lazy loading
   {
     path: '',
     component: NoTaskComponent,
