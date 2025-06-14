@@ -65,6 +65,10 @@ export class DragScrollService {
 
   /** Flag for vertical scrolling mode */
   private isVerticalScroll = false;
+
+  private touchStartLink: HTMLElement | null = null;
+  private touchStartX = 0;
+  private touchStartY = 0;
   //endregion
 
   //region Public Methods
@@ -113,27 +117,79 @@ export class DragScrollService {
   }
 
   /**
-   * Sets up all drag-related event listeners
+   * Sets up all drag-related event listeners with improved touch handling
+   * to allow both drag-scrolling and tap navigation on mobile devices
    */
   private setupDragListeners() {
-    // Mouse events
+    // Mouse events (unchanged)
     this.container.addEventListener('mousedown', this.onDragStart.bind(this));
     this.container.addEventListener('mousemove', this.onDragMove.bind(this));
     this.container.addEventListener('mouseup', this.onDragEnd.bind(this));
     this.container.addEventListener('mouseleave', this.onDragEnd.bind(this));
 
-    // Touch events (with passive: false for better control)
+    // Enhanced touch events with tap detection
     this.container.addEventListener(
       'touchstart',
-      this.onTouchStart.bind(this),
-      {
-        passive: false,
-      }
+      (e) => {
+        // Only prevent default for multi-touch (pinch zoom)
+        if (e.touches.length > 1) {
+          e.preventDefault();
+          return;
+        }
+
+        // Check if the touch target is a link or inside a link
+        const target = e.target as HTMLElement;
+        const linkElement = target.closest('a');
+
+        // If touching a link, store the reference and don't prevent default
+        if (linkElement) {
+          this.touchStartLink = linkElement;
+          return;
+        }
+
+        // Otherwise proceed with drag initialization
+        this.onTouchStart(e);
+      },
+      { passive: false }
     );
-    this.container.addEventListener('touchmove', this.onTouchMove.bind(this), {
-      passive: false,
+
+    this.container.addEventListener(
+      'touchmove',
+      (e) => {
+        // If we previously detected a link touch, check if it's now a drag
+        if (this.touchStartLink) {
+          const touch = e.touches[0];
+          const movedDistance = Math.sqrt(
+            Math.pow(touch.pageX - this.touchStartX, 2) +
+              Math.pow(touch.pageY - this.touchStartY, 2)
+          );
+
+          // If movement exceeds threshold (10px), cancel the link touch
+          if (movedDistance > 10) {
+            this.touchStartLink = null;
+            this.onTouchStart(e);
+          } else {
+            return; // Still a potential tap
+          }
+        }
+
+        // Normal drag handling
+        if (this.isDragging) {
+          e.preventDefault();
+          this.onTouchMove(e);
+        }
+      },
+      { passive: false }
+    );
+
+    this.container.addEventListener('touchend', (e) => {
+      // If we have a link reference and didn't move much, trigger click
+      if (this.touchStartLink && !this.isDragging) {
+        this.touchStartLink.click();
+      }
+      this.touchStartLink = null;
+      this.onDragEnd();
     });
-    this.container.addEventListener('touchend', this.onDragEnd.bind(this));
 
     // Prevent default drag behavior on draggable elements
     this.container.addEventListener('dragstart', (e) => e.preventDefault());
@@ -248,8 +304,10 @@ export class DragScrollService {
    * @param e Touch event
    */
   private onTouchStart(e: TouchEvent) {
-    e.preventDefault();
     const touch = e.touches[0];
+    this.touchStartX = touch.pageX;
+    this.touchStartY = touch.pageY;
+
     this.isDragging = true;
     this.startX = touch.pageX - this.container.offsetLeft;
     this.startY = touch.pageY - this.container.offsetTop;
