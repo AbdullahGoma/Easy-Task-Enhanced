@@ -14,6 +14,7 @@ header {
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 header::after {
@@ -24,6 +25,17 @@ header::after {
   right: 0;
   height: 4px;
   background: linear-gradient(to right, #9c73ca, #a565dd, #9c73ca);
+}
+
+.header-link {
+  text-decoration: none;
+  color: inherit;
+  display: contents; 
+}
+
+header:hover {
+  background: linear-gradient(to bottom, #3a0d66, #5713a3);
+  transition: background 0.3s ease;
 }
 
 header img {
